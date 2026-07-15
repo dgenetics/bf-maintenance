@@ -9,6 +9,8 @@ import { cleanupLegacyClient } from "./lib/cleanup-legacy";
 import { AssetList } from "./views/AssetList";
 import { AssetNew } from "./views/AssetNew";
 import { AssetDetail } from "./views/AssetDetail";
+import { ComponentDetail } from "./views/ComponentDetail";
+import { Maintenance } from "./views/Maintenance";
 
 const SW_RELOAD_KEY = "bf-sw-cleaned";
 
@@ -51,8 +53,13 @@ function LoadingShell() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<AssetList />} />
+        <Route path="maintenance" element={<Maintenance />} />
         <Route path="assets" element={<Navigate to="/" replace />} />
         <Route path="assets/new" element={<AssetNew />} />
+        <Route
+          path="assets/:systemId/components/:componentId"
+          element={<ComponentDetail />}
+        />
         <Route path="assets/:id" element={<AssetDetail />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

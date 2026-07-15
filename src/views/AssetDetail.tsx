@@ -146,6 +146,7 @@ export function AssetDetail() {
       </div>
 
       <ComponentsList
+        systemId={asset.id}
         components={asset.components}
         onAdd={(input) => addComponent(asset.id, input)}
         onUpdate={handleUpdateComponent}

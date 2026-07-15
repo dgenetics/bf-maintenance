@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
+  CalendarClock,
   ChevronDown,
   ChevronRight,
   Copy,
@@ -291,12 +293,14 @@ function EditableComponent({
 }
 
 export function ComponentsList({
+  systemId,
   components,
   onAdd,
   onUpdate,
   onDelete,
   onDuplicate,
 }: {
+  systemId: string
   components: SystemComponent[]
   onAdd: (input: SystemComponentInput) => void | Promise<void | SystemComponent>
   onUpdate: (
@@ -437,6 +441,15 @@ export function ComponentsList({
                       </p>
                     )}
                   </button>
+                  <Link
+                    to={`/assets/${systemId}/components/${part.id}`}
+                    className="mt-0.5 text-muted hover:text-forest-800"
+                    title="Maintenance schedules"
+                    aria-label={`Maintenance for ${displayName}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <CalendarClock className="h-4 w-4" />
+                  </Link>
                   <button
                     type="button"
                     className="mt-0.5 text-muted hover:text-forest-800"

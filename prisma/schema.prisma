@@ -1,4 +1,4 @@
-// BF Maintenance — systems & components registry
+// BF Maintenance — systems, components, schedules & tasks
 
 generator client {
   provider = "prisma-client"
@@ -24,27 +24,86 @@ model System {
 }
 
 model Component {
-  id                    String  @id @default(cuid())
+  id                    String    @id @default(cuid())
   systemId              String
   name                  String
-  location              String  @default("")
-  modelNumber           String  @default("")
-  productNumber         String  @default("")
-  serialNumber          String  @default("")
-  manufacturer          String  @default("")
-  warrantyInfo          String  @default("")
-  userManual            String  @default("")
-  vendorName            String  @default("")
-  vendorContact         String  @default("")
+  location              String    @default("")
+  modelNumber           String    @default("")
+  productNumber         String    @default("")
+  serialNumber          String    @default("")
+  manufacturer          String    @default("")
+  warrantyInfo          String    @default("")
+  userManual            String    @default("")
+  vendorName            String    @default("")
+  vendorContact         String    @default("")
   serviceCompanyName    String    @default("")
   serviceCompanyContact String    @default("")
   purchaseDate          DateTime?
   purchaseCost          Float?
   replacementCost       Float?
-  notes                 String  @default("")
-  sortOrder             Int     @default(0)
+  notes                 String    @default("")
+  sortOrder             Int       @default(0)
 
-  system System @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  system    System                 @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  schedules MaintenanceSchedule[]
+  tasks     MaintenanceTask[]
 
   @@index([systemId])
+}
+
+model MaintenanceSchedule {
+  id          String @id @default(cuid())
+  componentId String
+  component   Component @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  name         String
+  description  String?
+  /// e.g. "30d", "90d", "6mo", "1y"
+  frequency    String?
+  intervalDays Int?
+  isRecurring  Boolean @default(true)
+
+  nextDueDate     DateTime
+  lastCompletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tasks MaintenanceTask[]
+
+  @@index([componentId])
+  @@index([nextDueDate])
+}
+
+model MaintenanceTask {
+  id         String               @id @default(cuid())
+  scheduleId String?
+  schedule   MaintenanceSchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+
+  componentId String
+  component   Component @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  title          String
+  description    String?
+  dueDate        DateTime
+  status         TaskStatus @default(PENDING)
+
+  completedAt    DateTime?
+  completedNotes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([componentId])
+  @@index([scheduleId])
+  @@index([dueDate])
+  @@index([status])
+}
+
+enum TaskStatus {
+  PENDING
+  DUE_SOON
+  OVERDUE
+  COMPLETED
+  CANCELLED
 }

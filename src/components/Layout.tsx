@@ -1,9 +1,10 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Plus, Wrench } from 'lucide-react'
+import { CalendarClock, Plus, Wrench } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 const nav = [
   { to: '/', label: 'Systems', icon: Wrench, end: true },
+  { to: '/maintenance', label: 'Maintenance', icon: CalendarClock, end: false },
   { to: '/assets/new', label: 'Add', icon: Plus, end: false },
 ]
 

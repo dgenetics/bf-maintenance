@@ -53,6 +53,16 @@ node --env-file=.env.vercel scripts/push-turso-schema.mjs   # schema only if nee
 vercel --prod
 ```
 
+## App routes (UI)
+
+| Path | Screen |
+|------|--------|
+| `/` | Systems list |
+| `/maintenance` | Maintenance dashboard (tasks by status) |
+| `/assets/:id` | System detail + components |
+| `/assets/:systemId/components/:componentId` | Component maintenance (schedules & tasks) |
+| `/assets/new` | Add system |
+
 ## API
 
 | Method | Path | Description |
@@ -62,6 +72,11 @@ vercel --prod
 | POST | `/api/systems/:id/components` | Add component |
 | PATCH/DELETE | `/api/systems/:id/components/:cid` | Component update/delete |
 | POST | `.../components/:cid/duplicate` | Duplicate component |
+| GET/POST | `/api/schedules` | List / create schedules |
+| GET/PATCH/DELETE | `/api/schedules/:id` | Schedule CRUD |
+| GET/POST | `/api/tasks` | List / create tasks |
+| GET/PATCH/DELETE | `/api/tasks/:id` | Task get / complete / cancel / delete |
+| GET | `/api/tasks/suggest?componentId=` | Generate tasks from due schedules |
 
 ---
 
