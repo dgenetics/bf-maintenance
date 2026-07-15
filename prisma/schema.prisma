@@ -1,0 +1,50 @@
+// BF Maintenance — systems & components registry
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model System {
+  id        String   @id @default(cuid())
+  name      String
+  category  String   @default("Other")
+  notes     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  components Component[]
+
+  @@index([category])
+  @@index([name])
+}
+
+model Component {
+  id                    String  @id @default(cuid())
+  systemId              String
+  name                  String
+  location              String  @default("")
+  modelNumber           String  @default("")
+  productNumber         String  @default("")
+  serialNumber          String  @default("")
+  manufacturer          String  @default("")
+  warrantyInfo          String  @default("")
+  userManual            String  @default("")
+  vendorName            String  @default("")
+  vendorContact         String  @default("")
+  serviceCompanyName    String    @default("")
+  serviceCompanyContact String    @default("")
+  purchaseDate          DateTime?
+  purchaseCost          Float?
+  replacementCost       Float?
+  notes                 String  @default("")
+  sortOrder             Int     @default(0)
+
+  system System @relation(fields: [systemId], references: [id], onDelete: Cascade)
+
+  @@index([systemId])
+}
