@@ -32,3 +32,4 @@ src/generated
 *.sw?
 .vercel
 .env.bf*
+tsconfig.tsbuildinfo

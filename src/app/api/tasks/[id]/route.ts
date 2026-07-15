@@ -2,13 +2,8 @@ import { NextResponse } from "next/server";
 import type { TaskStatus } from "@/generated/prisma/client";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import {
-  addDays,
-  intervalDaysFromFrequency,
-  mapSchedule,
-  mapTask,
-  statusForDueDate,
-} from "@/lib/maintenance";
+import { completeMaintenanceTask } from "@/lib/complete-task";
+import { mapTask, statusForDueDate } from "@/lib/maintenance";
 
 export const runtime = "nodejs";
 
@@ -62,16 +57,26 @@ export async function PATCH(req: Request, ctx: Ctx) {
   }
 
   const db = getDb();
+
+  // Completion path (shared with AiEA integration)
+  if (body.status === "COMPLETED") {
+    const result = await completeMaintenanceTask(db, id, body.completedNotes);
+    if (!result) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    return NextResponse.json({
+      task: result.task,
+      schedule: result.schedule,
+      nextTask: result.nextTask,
+    });
+  }
+
   const existing = await db.maintenanceTask.findUnique({
     where: { id },
-    include: { schedule: true },
   });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-
-  const markingComplete =
-    body.status === "COMPLETED" && existing.status !== "COMPLETED";
 
   let dueDate: Date | undefined;
   if (body.dueDate !== undefined) {
@@ -100,77 +105,22 @@ export async function PATCH(req: Request, ctx: Ctx) {
         : {}),
       ...(dueDate !== undefined ? { dueDate } : {}),
       ...(status !== undefined ? { status } : {}),
-      ...(markingComplete
+      ...(body.completedNotes !== undefined
+        ? { completedNotes: body.completedNotes?.trim() || null }
+        : {}),
+      ...(status === "CANCELLED"
         ? {
-            status: "COMPLETED" as const,
-            completedAt: new Date(),
+            completedAt: null,
             completedNotes: body.completedNotes?.trim() || null,
           }
-        : body.completedNotes !== undefined
-          ? { completedNotes: body.completedNotes?.trim() || null }
-          : {}),
-      ...(status === "CANCELLED"
-        ? { completedAt: null, completedNotes: body.completedNotes?.trim() || null }
         : {}),
     },
   });
 
-  let nextTask = null;
-  let schedule = null;
-
-  if (markingComplete && existing.scheduleId && existing.schedule) {
-    const sched = existing.schedule;
-    const completedAt = new Date();
-    const days =
-      sched.intervalDays ?? intervalDaysFromFrequency(sched.frequency);
-
-    if (sched.isRecurring && days && days > 0) {
-      const nextDue = addDays(completedAt, days);
-      schedule = mapSchedule(
-        await db.maintenanceSchedule.update({
-          where: { id: sched.id },
-          data: {
-            lastCompletedAt: completedAt,
-            nextDueDate: nextDue,
-          },
-        }),
-      );
-
-      // Create next occurrence if none open
-      const open = await db.maintenanceTask.findFirst({
-        where: {
-          scheduleId: sched.id,
-          status: { in: ["PENDING", "DUE_SOON", "OVERDUE"] },
-        },
-      });
-      if (!open) {
-        nextTask = mapTask(
-          await db.maintenanceTask.create({
-            data: {
-              componentId: existing.componentId,
-              scheduleId: sched.id,
-              title: sched.name,
-              description: sched.description,
-              dueDate: nextDue,
-              status: statusForDueDate(nextDue),
-            },
-          }),
-        );
-      }
-    } else {
-      schedule = mapSchedule(
-        await db.maintenanceSchedule.update({
-          where: { id: sched.id },
-          data: { lastCompletedAt: completedAt },
-        }),
-      );
-    }
-  }
-
   return NextResponse.json({
     task: mapTask(updated),
-    schedule,
-    nextTask,
+    schedule: null,
+    nextTask: null,
   });
 }
 
