@@ -2,7 +2,9 @@
 
 Systems and components registry for **Beausoleil Farm** — house and property.
 
-Systems and components are stored in a **permanent database** (SQLite locally, Turso in production).
+Systems and components are stored in a **permanent database** (SQLite locally, dedicated Turso in production).
+
+> **Database ownership:** BF Maintenance owns its own Turso database (`bf-maintenance-db`). It must **not** share AiEA’s Turso instance. Local: `file:./dev.db`. Production: Vercel Marketplace Turso resource connected to this project only.
 
 ## System fields
 
@@ -34,18 +36,22 @@ Open http://localhost:3000
 
 ## Production database (Turso)
 
-1. Create a free Turso database and token.
-2. Set on Vercel (Production):
-   - `TURSO_DATABASE_URL`
-   - `TURSO_AUTH_TOKEN`
-3. Push schema:
+Provisioned via Vercel Marketplace as **`bf-maintenance-db`** (project-linked). Env vars:
+
+| Var | Purpose |
+|-----|---------|
+| `TURSO_DATABASE_URL` | libSQL URL (from Marketplace resource) |
+| `TURSO_AUTH_TOKEN` | DB token (from Marketplace resource) |
+| `BF_ACCESS_PIN` | App unlock PIN |
+| `BF_SESSION_SECRET` | Session HMAC secret |
+
+Do **not** reuse AiEA’s `TURSO_*` values.
 
 ```bash
 vercel env pull .env.vercel --environment=production --yes
-node --env-file=.env.vercel scripts/push-turso-schema.mjs
+node --env-file=.env.vercel scripts/push-turso-schema.mjs   # schema only if needed
+vercel --prod
 ```
-
-4. Deploy: `vercel --prod`
 
 ## API
 
