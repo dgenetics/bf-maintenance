@@ -33,3 +33,7 @@ src/generated
 .vercel
 .env.bf*
 tsconfig.tsbuildinfo
+
+# verify skill run logs (keep directory via .gitkeep)
+.cursor/skills/verify-bf-maintenance/evidence/*/
+!.cursor/skills/verify-bf-maintenance/evidence/.gitkeep
