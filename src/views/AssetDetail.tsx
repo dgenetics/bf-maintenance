@@ -11,7 +11,7 @@ import {
 import { formatMoney } from '../lib/utils'
 import { AssetFormFields } from '../components/AssetFormFields'
 import { ComponentsList } from '../components/ComponentsList'
-import { Button, Card, PageHeader } from '../components/ui'
+import { Button, Card, PageHeader, StickySaveBar } from '../components/ui'
 
 function toInput(asset: Asset): AssetInput {
   const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = asset
@@ -84,7 +84,7 @@ export function AssetDetail() {
             value={draft}
             onChange={(patch) => setDraft((prev) => ({ ...prev!, ...patch }))}
           />
-          <div className="flex justify-end gap-2 border-t border-cream-200 pt-4">
+          <StickySaveBar>
             <Button
               variant="secondary"
               onClick={() => {
@@ -97,7 +97,7 @@ export function AssetDetail() {
             <Button onClick={saveEdit} disabled={!draft.name.trim()}>
               Save changes
             </Button>
-          </div>
+          </StickySaveBar>
         </Card>
       </div>
     )

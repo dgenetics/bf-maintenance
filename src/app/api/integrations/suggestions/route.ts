@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { requireIntegrationAuth } from "@/lib/integration-auth";
 import { getDb } from "@/lib/db";
 import {
-  mapTask,
-  statusForDueDate,
+  dueUrgency,
+  OPEN_STATUSES,
   type TaskJson,
 } from "@/lib/maintenance";
 
@@ -51,7 +51,7 @@ export async function GET(req: Request) {
       system: true,
       schedules: true,
       tasks: {
-        where: { status: { in: ["PENDING", "DUE_SOON", "OVERDUE"] } },
+        where: { status: { in: OPEN_STATUSES } },
       },
     },
     orderBy: { name: "asc" },
@@ -77,35 +77,18 @@ export async function GET(req: Request) {
           title: schedule.name,
           description: schedule.description,
           dueDate: schedule.nextDueDate,
-          status: statusForDueDate(schedule.nextDueDate, now),
+          status: "BACKLOG",
         },
       });
       component.tasks.push(task);
       createdCount += 1;
     }
 
-    // Refresh statuses
-    for (const task of component.tasks) {
-      if (
-        task.status === "COMPLETED" ||
-        task.status === "CANCELLED"
-      ) {
-        continue;
-      }
-      const next = statusForDueDate(task.dueDate, now);
-      if (next !== task.status) {
-        const updated = await db.maintenanceTask.update({
-          where: { id: task.id },
-          data: { status: next },
-        });
-        Object.assign(task, updated);
-      }
-    }
   }
 
   // Reload open tasks with full context
   const open = await db.maintenanceTask.findMany({
-    where: { status: { in: ["PENDING", "DUE_SOON", "OVERDUE"] } },
+    where: { status: { in: OPEN_STATUSES } },
     include: {
       component: { include: { system: true } },
       schedule: true,
@@ -114,14 +97,7 @@ export async function GET(req: Request) {
   });
 
   const suggestions: BfSuggestion[] = open.map((t) => {
-    const priority =
-      t.status === "OVERDUE" ? 1 : t.status === "DUE_SOON" ? 2 : 3;
-    const reason =
-      t.status === "OVERDUE"
-        ? "Overdue maintenance"
-        : t.status === "DUE_SOON"
-          ? "Due within 7 days"
-          : "Scheduled maintenance";
+    const { priority, reason } = dueUrgency(t.dueDate, now);
 
     const scheduleBit = t.schedule
       ? `Schedule: ${t.schedule.name}${t.schedule.frequency ? ` (${t.schedule.frequency})` : ""}`

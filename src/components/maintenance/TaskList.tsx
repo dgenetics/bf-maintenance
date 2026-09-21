@@ -1,6 +1,6 @@
 "use client";
 
-import type { TaskJson } from "@/lib/maintenance";
+import type { BoardColumn, TaskJson } from "@/lib/maintenance";
 import { TaskCard } from "./TaskCard";
 
 export function TaskList({
@@ -9,6 +9,7 @@ export function TaskList({
   subtitleFor,
   onComplete,
   onCancel,
+  onMove,
   busyId,
 }: {
   tasks: TaskJson[];
@@ -16,6 +17,7 @@ export function TaskList({
   subtitleFor?: (task: TaskJson) => string | undefined;
   onComplete?: (task: TaskJson) => void;
   onCancel?: (task: TaskJson) => void;
+  onMove?: (task: TaskJson, status: BoardColumn) => void;
   busyId?: string | null;
 }) {
   if (tasks.length === 0) {
@@ -30,10 +32,9 @@ export function TaskList({
           task={task}
           subtitle={subtitleFor?.(task)}
           busy={busyId === task.id}
-          onComplete={
-            onComplete ? () => onComplete(task) : undefined
-          }
+          onComplete={onComplete ? () => onComplete(task) : undefined}
           onCancel={onCancel ? () => onCancel(task) : undefined}
+          onMove={onMove ? (status) => onMove(task, status) : undefined}
         />
       ))}
     </div>

@@ -5,7 +5,7 @@ import { useData } from '../context/DataContext'
 import type { AssetInput } from '../types'
 import { emptyAssetInput } from '../lib/utils'
 import { AssetFormFields } from '../components/AssetFormFields'
-import { Button, Card, PageHeader } from '../components/ui'
+import { Button, Card, PageHeader, StickySaveBar } from '../components/ui'
 
 export function AssetNew() {
   const { addAsset } = useData()
@@ -43,7 +43,7 @@ export function AssetNew() {
             value={value}
             onChange={(patch) => setValue((prev) => ({ ...prev, ...patch }))}
           />
-          <div className="flex justify-end gap-2 border-t border-cream-200 pt-4">
+          <StickySaveBar>
             <Button
               type="button"
               variant="secondary"
@@ -54,7 +54,7 @@ export function AssetNew() {
             <Button type="submit" disabled={!value.name.trim()}>
               Save
             </Button>
-          </div>
+          </StickySaveBar>
         </form>
       </Card>
     </div>

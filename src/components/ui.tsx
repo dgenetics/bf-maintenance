@@ -204,3 +204,21 @@ export function StatCard({
     </Card>
   )
 }
+
+
+export function StickySaveBar({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <>
+      <div className="h-20" aria-hidden />
+      <div className="fixed right-0 bottom-[3.75rem] left-0 z-30 border-t border-cream-200 bg-cream-50/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-3xl justify-end gap-2 px-4 py-3">
+          {children}
+        </div>
+      </div>
+    </>
+  )
+}

@@ -12,6 +12,7 @@ import {
 import { useData } from "@/context/DataContext";
 import { maintenanceApi } from "@/lib/api";
 import type { ScheduleJson, TaskJson } from "@/lib/maintenance";
+import { OPEN_STATUSES } from "@/lib/maintenance";
 import { ScheduleForm } from "@/components/maintenance/ScheduleForm";
 import { TaskList } from "@/components/maintenance/TaskList";
 import { StatusBadge } from "@/components/maintenance/TaskCard";
@@ -70,7 +71,7 @@ export function ComponentDetail() {
   }
 
   const openTasks = tasks.filter((t) =>
-    ["PENDING", "DUE_SOON", "OVERDUE"].includes(t.status),
+    (OPEN_STATUSES as string[]).includes(t.status),
   );
   const doneTasks = tasks
     .filter((t) => t.status === "COMPLETED")
@@ -274,11 +275,19 @@ export function ComponentDetail() {
 
       {doneTasks.length > 0 && (
         <Card>
-          <h3 className="mb-3 text-xs font-semibold tracking-wide text-forest-800 uppercase">
-            Recently completed
-          </h3>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h3 className="text-xs font-semibold tracking-wide text-forest-800 uppercase">
+              Recently completed
+            </h3>
+            <Link
+              to="/maintenance/archive"
+              className="text-xs font-medium text-forest-800 hover:underline"
+            >
+              Full archive
+            </Link>
+          </div>
           <ul className="space-y-2">
-            {doneTasks.map((t) => (
+            {doneTasks.slice(0, 3).map((t) => (
               <li
                 key={t.id}
                 className="flex items-center justify-between gap-2 text-sm"

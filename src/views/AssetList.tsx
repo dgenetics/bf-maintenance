@@ -10,8 +10,8 @@ import { Button, Card, Input, PageHeader, Select } from '../components/ui'
 export function AssetList() {
   const { assets } = useData()
   const [params, setParams] = useSearchParams()
-  const [query, setQuery] = useState('')
   const category = params.get('category') ?? 'all'
+  const [query, setQuery] = useState(() => params.get('q') ?? '')
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -46,7 +46,11 @@ export function AssetList() {
     <div>
       <PageHeader
         title="Systems"
-        subtitle={`${assets.length} system${assets.length === 1 ? '' : 's'}`}
+        subtitle={
+          query.trim() || category !== 'all'
+            ? `${filtered.length} of ${assets.length} system${assets.length === 1 ? '' : 's'}`
+            : `${assets.length} system${assets.length === 1 ? '' : 's'}`
+        }
         action={
           <Link to="/assets/new">
             <Button size="sm">
@@ -63,7 +67,14 @@ export function AssetList() {
           <Input
             className="pl-9"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value
+              setQuery(next)
+              const sp = new URLSearchParams(params)
+              if (next.trim()) sp.set('q', next)
+              else sp.delete('q')
+              setParams(sp, { replace: true })
+            }}
             placeholder="Search name, model, serial, vendor…"
             aria-label="Search systems"
           />
@@ -126,14 +137,16 @@ export function AssetList() {
                         : 'No components yet'}
                     </p>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-[10px] font-semibold tracking-wide text-muted uppercase">
-                      Replace
-                    </p>
-                    <p className="text-sm font-semibold tabular-nums">
-                      {formatMoney(systemReplacementTotal(asset) || null)}
-                    </p>
-                  </div>
+                  {systemReplacementTotal(asset) > 0 && (
+                    <div className="shrink-0 text-right">
+                      <p className="text-[10px] font-semibold tracking-wide text-muted uppercase">
+                        Replace
+                      </p>
+                      <p className="text-sm font-semibold tabular-nums">
+                        {formatMoney(systemReplacementTotal(asset))}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </Card>
             </Link>

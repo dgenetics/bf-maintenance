@@ -3,7 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import {
   mapTask,
-  statusForDueDate,
+  OPEN_STATUSES,
   type TaskJson,
 } from "@/lib/maintenance";
 
@@ -12,8 +12,8 @@ export const runtime = "nodejs";
 /**
  * GET /api/tasks/suggest?componentId=xxx
  *
- * Creates an open MaintenanceTask for each schedule that does not already
- * have one. Idempotent. Also refreshes open-task statuses from due dates.
+ * Creates an open MaintenanceTask (BACKLOG) for each schedule that does not
+ * already have one. Idempotent. Does not overwrite board status from due dates.
  */
 export async function GET(req: Request) {
   const denied = await requireAuth();
@@ -33,7 +33,7 @@ export async function GET(req: Request) {
     include: {
       schedules: { orderBy: { nextDueDate: "asc" } },
       tasks: {
-        where: { status: { in: ["PENDING", "DUE_SOON", "OVERDUE"] } },
+        where: { status: { in: OPEN_STATUSES } },
       },
     },
   });
@@ -56,27 +56,14 @@ export async function GET(req: Request) {
     });
   }
 
-  const now = new Date();
   const created: TaskJson[] = [];
   const refreshed: TaskJson[] = [];
   const skipped: { scheduleId: string; reason: string }[] = [];
 
-  for (const task of component.tasks) {
-    if (task.status === "COMPLETED" || task.status === "CANCELLED") continue;
-    const nextStatus = statusForDueDate(task.dueDate, now);
-    if (nextStatus !== task.status) {
-      const updated = await db.maintenanceTask.update({
-        where: { id: task.id },
-        data: { status: nextStatus },
-      });
-      refreshed.push(mapTask(updated));
-    }
-  }
-
   const openTasks = await db.maintenanceTask.findMany({
     where: {
       componentId,
-      status: { in: ["PENDING", "DUE_SOON", "OVERDUE"] },
+      status: { in: OPEN_STATUSES },
     },
   });
 
@@ -102,7 +89,7 @@ export async function GET(req: Request) {
         title: schedule.name,
         description: schedule.description,
         dueDate: schedule.nextDueDate,
-        status: statusForDueDate(schedule.nextDueDate, now),
+        status: "BACKLOG",
       },
     });
     created.push(mapTask(task));
@@ -111,7 +98,7 @@ export async function GET(req: Request) {
   const open = await db.maintenanceTask.findMany({
     where: {
       componentId,
-      status: { in: ["PENDING", "DUE_SOON", "OVERDUE"] },
+      status: { in: OPEN_STATUSES },
     },
     orderBy: { dueDate: "asc" },
   });

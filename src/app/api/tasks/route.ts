@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import type { TaskStatus } from "@/generated/prisma/client";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { mapTask, statusForDueDate } from "@/lib/maintenance";
+import { mapTask, OPEN_STATUSES } from "@/lib/maintenance";
 
 export const runtime = "nodejs";
 
 const TASK_STATUSES: TaskStatus[] = [
-  "PENDING",
-  "DUE_SOON",
-  "OVERDUE",
+  "ICEBOX",
+  "BACKLOG",
+  "CURRENT",
   "COMPLETED",
   "CANCELLED",
 ];
@@ -19,7 +19,7 @@ function isTaskStatus(v: string): v is TaskStatus {
 }
 
 /**
- * GET /api/tasks?status=PENDING&componentId=xxx&scheduleId=xxx
+ * GET /api/tasks?status=BACKLOG&componentId=xxx&scheduleId=xxx&open=1
  * POST /api/tasks — create a manual (or schedule-linked) task
  */
 export async function GET(req: Request) {
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
 
   const db = getDb();
   const statusFilter: TaskStatus | { in: TaskStatus[] } | undefined = openOnly
-    ? { in: ["PENDING", "DUE_SOON", "OVERDUE"] }
+    ? { in: OPEN_STATUSES }
     : statusExact;
 
   const tasks = await db.maintenanceTask.findMany({
@@ -131,8 +131,7 @@ export async function POST(req: Request) {
     }
   }
 
-  // Manual tasks: status from due date unless explicitly COMPLETED/CANCELLED
-  let status: TaskStatus = statusForDueDate(dueDate);
+  let status: TaskStatus = "BACKLOG";
   if (body.status && isTaskStatus(body.status)) {
     status = body.status;
   }

@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { CalendarClock, RefreshCw, Wrench } from "lucide-react";
+import { Archive, CalendarClock, RefreshCw, Wrench } from "lucide-react";
 import { maintenanceApi } from "@/lib/api";
-import type { TaskJson } from "@/lib/maintenance";
+import type { BoardColumn, TaskJson } from "@/lib/maintenance";
 import { useData } from "@/context/DataContext";
 import { UpcomingTasks } from "@/components/maintenance/UpcomingTasks";
 import { Button, PageHeader } from "@/components/ui";
@@ -32,7 +32,7 @@ export function Maintenance() {
     setError(null);
     setLoading(true);
     try {
-      const list = await maintenanceApi.listTasks();
+      const list = await maintenanceApi.listTasks({ open: true });
       setTasks(list);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load tasks");
@@ -45,12 +45,9 @@ export function Maintenance() {
     void load();
   }, [load]);
 
-  const overdue = tasks.filter((t) => t.status === "OVERDUE");
-  const dueSoon = tasks.filter((t) => t.status === "DUE_SOON");
-  const upcoming = tasks.filter((t) => t.status === "PENDING");
-  const completed = tasks
-    .filter((t) => t.status === "COMPLETED")
-    .slice(0, 8);
+  const icebox = tasks.filter((t) => t.status === "ICEBOX");
+  const backlog = tasks.filter((t) => t.status === "BACKLOG");
+  const current = tasks.filter((t) => t.status === "CURRENT");
 
   async function handleComplete(task: TaskJson) {
     setBusyId(task.id);
@@ -71,6 +68,18 @@ export function Maintenance() {
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Cancel failed");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleMove(task: TaskJson, status: BoardColumn) {
+    setBusyId(task.id);
+    try {
+      await maintenanceApi.updateTask(task.id, { status });
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Move failed");
     } finally {
       setBusyId(null);
     }
@@ -113,21 +122,19 @@ export function Maintenance() {
     <div className="space-y-4">
       <PageHeader
         title="Maintenance"
-        subtitle="Upcoming work across systems & components"
+        subtitle="Board: icebox · backlog · current"
         action={
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={suggesting || loading}
-              onClick={() => void suggestAll()}
-            >
-              <RefreshCw
-                className={`h-3.5 w-3.5 ${suggesting ? "animate-spin" : ""}`}
-              />
-              Suggest tasks
-            </Button>
-          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={suggesting || loading}
+            onClick={() => void suggestAll()}
+          >
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${suggesting ? "animate-spin" : ""}`}
+            />
+            Suggest tasks
+          </Button>
         }
       />
 
@@ -136,6 +143,12 @@ export function Maintenance() {
           <Button size="sm" variant="secondary">
             <Wrench className="h-3.5 w-3.5" />
             Systems
+          </Button>
+        </Link>
+        <Link to="/maintenance/archive">
+          <Button size="sm" variant="secondary">
+            <Archive className="h-3.5 w-3.5" />
+            Archive
           </Button>
         </Link>
         <Button
@@ -164,13 +177,13 @@ export function Maintenance() {
         <p className="text-sm text-muted">Loading tasks…</p>
       ) : (
         <UpcomingTasks
-          overdue={overdue}
-          dueSoon={dueSoon}
-          upcoming={upcoming}
-          completed={completed}
+          icebox={icebox}
+          backlog={backlog}
+          current={current}
           subtitleFor={(t) => componentLabel.get(t.componentId)}
           onComplete={handleComplete}
           onCancel={handleCancel}
+          onMove={handleMove}
           busyId={busyId}
         />
       )}

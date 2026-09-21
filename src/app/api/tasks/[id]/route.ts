@@ -3,16 +3,16 @@ import type { TaskStatus } from "@/generated/prisma/client";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { completeMaintenanceTask } from "@/lib/complete-task";
-import { mapTask, statusForDueDate } from "@/lib/maintenance";
+import { mapTask } from "@/lib/maintenance";
 
 export const runtime = "nodejs";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 const TASK_STATUSES: TaskStatus[] = [
-  "PENDING",
-  "DUE_SOON",
-  "OVERDUE",
+  "ICEBOX",
+  "BACKLOG",
+  "CURRENT",
   "COMPLETED",
   "CANCELLED",
 ];
@@ -92,8 +92,6 @@ export async function PATCH(req: Request, ctx: Ctx) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
     status = body.status as TaskStatus;
-  } else if (dueDate) {
-    status = statusForDueDate(dueDate);
   }
 
   const updated = await db.maintenanceTask.update({

@@ -86,7 +86,7 @@ model MaintenanceTask {
   title          String
   description    String?
   dueDate        DateTime
-  status         TaskStatus @default(PENDING)
+  status         TaskStatus @default(BACKLOG)
 
   completedAt    DateTime?
   completedNotes String?
@@ -101,9 +101,9 @@ model MaintenanceTask {
 }
 
 enum TaskStatus {
-  PENDING
-  DUE_SOON
-  OVERDUE
+  ICEBOX
+  BACKLOG
+  CURRENT
   COMPLETED
   CANCELLED
 }

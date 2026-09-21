@@ -4,6 +4,12 @@ import type {
   TaskStatus,
 } from "@/generated/prisma/client";
 
+/** Board statuses that count as open (shown on the kanban). */
+export const OPEN_STATUSES: TaskStatus[] = ["ICEBOX", "BACKLOG", "CURRENT"];
+
+export const BOARD_COLUMNS = ["ICEBOX", "BACKLOG", "CURRENT"] as const;
+export type BoardColumn = (typeof BOARD_COLUMNS)[number];
+
 /** Map frequency labels to interval days (null = custom / unknown). */
 export function intervalDaysFromFrequency(
   frequency: string | null | undefined,
@@ -101,22 +107,32 @@ export function mapTask(t: DbTask): TaskJson {
   };
 }
 
-/** Derive PENDING / DUE_SOON / OVERDUE from due date for open tasks. */
-export function statusForDueDate(
-  dueDate: Date,
-  now = new Date(),
-): Extract<TaskStatus, "PENDING" | "DUE_SOON" | "OVERDUE"> {
-  const msPerDay = 24 * 60 * 60 * 1000;
-  const daysUntil =
-    (startOfUtcDay(dueDate).getTime() - startOfUtcDay(now).getTime()) /
-    msPerDay;
-  if (daysUntil < 0) return "OVERDUE";
-  if (daysUntil <= 7) return "DUE_SOON";
-  return "PENDING";
+export function startOfLocalDay(d = new Date()): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-function startOfUtcDay(d: Date): Date {
-  return new Date(
-    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
-  );
+/** UI overdue badge only — never a board status. */
+export function isOverdue(dueDate: string | Date, now = new Date()): boolean {
+  const due = typeof dueDate === "string" ? new Date(dueDate) : dueDate;
+  if (Number.isNaN(due.getTime())) return false;
+  const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+  return dueDay.getTime() < startOfLocalDay(now).getTime();
+}
+
+/** Sort/priority urgency from due date (1=overdue, 2=soon, 3=later). */
+export function dueUrgency(
+  dueDate: Date,
+  now = new Date(),
+): { priority: number; reason: string } {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const daysUntil =
+    (startOfLocalDay(dueDate).getTime() - startOfLocalDay(now).getTime()) /
+    msPerDay;
+  if (daysUntil < 0) return { priority: 1, reason: "Overdue maintenance" };
+  if (daysUntil <= 7) return { priority: 2, reason: "Due within 7 days" };
+  return { priority: 3, reason: "Scheduled maintenance" };
+}
+
+export function isOpenStatus(status: TaskStatus): boolean {
+  return (OPEN_STATUSES as string[]).includes(status);
 }

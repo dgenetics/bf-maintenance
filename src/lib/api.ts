@@ -115,6 +115,21 @@ export const maintenanceApi = {
       body: JSON.stringify(input),
     }),
 
+  updateTask: (
+    id: string,
+    patch: {
+      title?: string;
+      description?: string | null;
+      dueDate?: string;
+      status?: string;
+      completedNotes?: string | null;
+    },
+  ) =>
+    request<CompleteTaskResult>(`/api/tasks/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    }),
+
   completeTask: (id: string, completedNotes?: string) =>
     request<CompleteTaskResult>(`/api/tasks/${id}`, {
       method: "PATCH",

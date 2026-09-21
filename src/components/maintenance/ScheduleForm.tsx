@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FREQUENCY_OPTIONS } from "@/lib/maintenance";
 import type { CreateScheduleInput } from "@/lib/api";
-import { Button, Field, Input, Select, Textarea } from "../ui";
+import { Button, Field, Input, Select, StickySaveBar, Textarea } from "../ui";
 
 export function ScheduleForm({
   componentId,
@@ -119,7 +119,7 @@ export function ScheduleForm({
         Recurring (create next task when completed)
       </label>
       {error && <p className="text-xs font-medium text-red-700">{error}</p>}
-      <div className="flex justify-end gap-2">
+      <StickySaveBar>
         {onCancel && (
           <Button
             type="button"
@@ -134,7 +134,7 @@ export function ScheduleForm({
         <Button type="submit" size="sm" disabled={busy || !name.trim()}>
           {busy ? "Saving…" : "Save schedule"}
         </Button>
-      </div>
+      </StickySaveBar>
     </form>
   );
 }

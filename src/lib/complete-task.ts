@@ -4,7 +4,7 @@ import {
   intervalDaysFromFrequency,
   mapSchedule,
   mapTask,
-  statusForDueDate,
+  OPEN_STATUSES,
   type ScheduleJson,
   type TaskJson,
 } from "@/lib/maintenance";
@@ -73,7 +73,7 @@ export async function completeMaintenanceTask(
       const open = await db.maintenanceTask.findFirst({
         where: {
           scheduleId: sched.id,
-          status: { in: ["PENDING", "DUE_SOON", "OVERDUE"] },
+          status: { in: OPEN_STATUSES },
         },
       });
       if (!open) {
@@ -85,7 +85,7 @@ export async function completeMaintenanceTask(
               title: sched.name,
               description: sched.description,
               dueDate: nextDue,
-              status: statusForDueDate(nextDue),
+              status: "BACKLOG",
             },
           }),
         );
