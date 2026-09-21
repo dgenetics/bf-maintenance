@@ -1,0 +1,13 @@
+{
+  "feature": "pin-gate",
+  "base": "https://bf-maintenance.vercel.app",
+  "runId": "20260921T233143Z-87dad6e",
+  "steps": [
+    "locked: heading Maintenance access visible",
+    "wrong pin: Incorrect PIN shown",
+    "right pin: Systems heading + Beausoleil Farm chrome"
+  ],
+  "pinSource": "BF_ACCESS_PIN",
+  "sha": "87dad6e",
+  "finished": "2026-09-21T23:31:49.014Z"
+}
