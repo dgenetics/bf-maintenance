@@ -13,7 +13,7 @@ Maintained verification source for Beausoleil Farm date/schedule maintenance. Re
 ## Driving conventions
 
 - Harness: `node .cursor/skills/verify-bf-maintenance/scripts/drive.mjs --feature <id> --base-url <url>`.
-- Prefer ARIA roles / accessible names (`Access PIN`, `Search systems`, `Unlock`, nav `Maintenance`).
+- Prefer ARIA roles / accessible names (`Access PIN`, `Search systems`, `Unlock`, nav link `Maintenance`). Page titles are PageHeader **h2** — use `getByRole('heading', { level: 2, name: ... })` so Layout chrome h1 `Maintenance` does not collide.
 - Start from locked or unlocked state as each recipe’s preconditions state.
 - Mutations on live: avoid creating junk; prefer read-only paths (`pin-gate`, search with disposable query, buckets, archive view, sticky-save geometry).
 - Restore or avoid fixture pollution; never delete `evidence/` in cleanup.

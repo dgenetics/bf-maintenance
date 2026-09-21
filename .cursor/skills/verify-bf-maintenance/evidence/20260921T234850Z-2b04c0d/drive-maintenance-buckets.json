@@ -1,0 +1,13 @@
+{
+  "feature": "maintenance-buckets",
+  "base": "https://bf-maintenance.vercel.app",
+  "runId": "20260921T234850Z-2b04c0d",
+  "steps": [
+    "bucket visible: Overdue",
+    "bucket visible: Due soon",
+    "bucket visible: Upcoming"
+  ],
+  "pinSource": "BF_ACCESS_PIN",
+  "sha": "2b04c0d",
+  "finished": "2026-09-21T23:48:55.746Z"
+}

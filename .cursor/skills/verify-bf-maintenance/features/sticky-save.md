@@ -20,7 +20,7 @@ Preconditions:
 - Unlocked; doctor green.
 - Prefer read-only geometry check (do not save junk on live).
 
-- **Open add system.** Run `node scripts/drive.mjs --feature sticky-save --base-url <url>`. Heading `Add system`; buttons `Cancel` and `Save` visible in the sticky bar.
+- **Open add system.** Run `node scripts/drive.mjs --feature sticky-save --base-url <url>`. Page heading `getByRole('heading', { level: 2, name: 'Add system' })`; buttons `Cancel` and `Save` visible in the sticky bar.
 - **Measure.** Compare Save `boundingBox()` to the bottom `nav` box — Save’s bottom must be above nav’s top. Capture `sticky-save.png`.
 - **Proof.** Geometry assertion in drive output + screenshot showing Save above the tab bar.
 

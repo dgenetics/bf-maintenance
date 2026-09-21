@@ -19,7 +19,7 @@ Preconditions:
 
 - Unlocked; doctor green.
 
-- **Open archive.** Run `node scripts/drive.mjs --feature archive --base-url <url>`. Heading `Completed archive` appears. Capture `archive.png`.
+- **Open archive.** Run `node scripts/drive.mjs --feature archive --base-url <url>`. Page heading `getByRole('heading', { level: 2, name: 'Completed archive' })` appears. Capture `archive.png`.
 - **Filters (optional manual).** Change `Filter by system` / dates; URL params `system`, `component`, `from`, `to` update; subtitle `N of M completed tasks` stays honest.
 - **Proof.** Screenshot of Completed archive; API check `GET /api/tasks?status=COMPLETED` (or equivalent client call) returns JSON when session valid.
 

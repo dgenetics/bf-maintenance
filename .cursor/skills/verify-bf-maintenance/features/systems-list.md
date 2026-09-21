@@ -22,7 +22,7 @@ Preconditions:
 - Unlocked session (drive unlocks if locked).
 - Instance has zero or more systems (live typically has many).
 
-- **Open list.** Run `node scripts/drive.mjs --feature systems-list --base-url <url>`. Heading `Systems` visible.
+- **Open list.** Run `node scripts/drive.mjs --feature systems-list --base-url <url>`. Page heading `getByRole('heading', { level: 2, name: 'Systems', exact: true })` visible (exact avoids substring match on empty-state `No systems yet`).
 - **Empty search.** Fill `Search systems` with `xyzzy-no-match-verify`. URL contains `q=`; UI shows No matches / `0 of N`. Capture `systems-search-empty.png`.
 - **Filtered count.** Clear and type a letter that matches something (e.g. `a`). Subtitle matches `N of M systems` when filtered. Capture `systems-search-filtered.png`.
 - **Proof.** Screenshots + URL query string; do not assert API filter (search is client-side over loaded assets).

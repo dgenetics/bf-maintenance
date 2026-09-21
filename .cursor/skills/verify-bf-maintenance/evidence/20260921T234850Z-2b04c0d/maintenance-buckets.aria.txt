@@ -1,0 +1,74 @@
+- alert
+- banner:
+  - paragraph: Beausoleil Farm
+  - heading "Maintenance" [level=1]
+  - text: Systems
+- main:
+  - heading "Maintenance" [level=2]
+  - paragraph: Upcoming work across systems & components
+  - button "Suggest tasks"
+  - link "Systems":
+    - /url: /
+    - button "Systems"
+  - link "Archive":
+    - /url: /maintenance/archive
+    - button "Archive"
+  - button "Refresh"
+  - heading "Overdue" [level=3]
+  - text: "1"
+  - paragraph: Battery health check
+  - paragraph: Energy · Batteries
+  - paragraph: Due Aug 14, 2026 · overdue 38d
+  - text: overdue 38d
+  - paragraph: Check BMS app for cell balance, state of charge, and error codes.
+  - button "Mark complete"
+  - button "Cancel"
+  - heading "Due soon" [level=3]
+  - text: "0"
+  - paragraph: Nothing due in the next week
+  - heading "Upcoming" [level=3]
+  - text: "3"
+  - paragraph: Clean solar panels
+  - paragraph: Energy · Solar Panels
+  - paragraph: Due Oct 13, 2026
+  - text: PENDING
+  - paragraph: Rinse dust/pollen from panel surface; inspect mounting hardware.
+  - button "Mark complete"
+  - button "Cancel"
+  - paragraph: Change Air Filter
+  - paragraph: Heating and Cooling · Forced Air Unit
+  - paragraph: Due Jan 1, 2027
+  - text: PENDING
+  - button "Mark complete"
+  - button "Cancel"
+  - paragraph: Inverter annual inspection
+  - paragraph: Energy · Inverters
+  - paragraph: Due Jul 15, 2027
+  - text: PENDING
+  - paragraph: Visual inspection, firmware check, and cooling fan clean.
+  - button "Mark complete"
+  - button "Cancel"
+  - heading "Recently completed" [level=3]
+  - text: "3"
+  - link "Archive":
+    - /url: /maintenance/archive
+    - button "Archive"
+  - paragraph: Inverter annual inspection
+  - paragraph: Due Jul 29, 2026 · done Jul 15
+  - text: COMPLETED
+  - paragraph: Visual inspection, firmware check, and cooling fan clean.
+  - paragraph: Battery health check
+  - paragraph: Due Jul 18, 2026 · done Jul 15
+  - text: COMPLETED
+  - paragraph: Check BMS app for cell balance, state of charge, and error codes.
+  - paragraph: Clean solar panels
+  - paragraph: Due Jul 12, 2026 · done Jul 15
+  - text: COMPLETED
+  - paragraph: Rinse dust/pollen from panel surface; inspect mounting hardware.
+- navigation:
+  - link "Systems":
+    - /url: /
+  - link "Maintenance":
+    - /url: /maintenance
+  - link "Add":
+    - /url: /assets/new
