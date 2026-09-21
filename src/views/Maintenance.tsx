@@ -2,9 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { CalendarClock, RefreshCw, Wrench } from "lucide-react";
+import { Archive, CalendarClock, RefreshCw, Wrench } from "lucide-react";
 import { maintenanceApi } from "@/lib/api";
-import type { TaskJson } from "@/lib/maintenance";
+import {
+  partitionTasksByDueDate,
+  type TaskJson,
+} from "@/lib/maintenance";
 import { useData } from "@/context/DataContext";
 import { UpcomingTasks } from "@/components/maintenance/UpcomingTasks";
 import { Button, PageHeader } from "@/components/ui";
@@ -45,12 +48,12 @@ export function Maintenance() {
     void load();
   }, [load]);
 
-  const overdue = tasks.filter((t) => t.status === "OVERDUE");
-  const dueSoon = tasks.filter((t) => t.status === "DUE_SOON");
-  const upcoming = tasks.filter((t) => t.status === "PENDING");
-  const completed = tasks
-    .filter((t) => t.status === "COMPLETED")
-    .slice(0, 8);
+  // Bucket by due date vs today (not stored status, which can go stale).
+  const { overdue, dueSoon, upcoming, completed } = useMemo(
+    () => partitionTasksByDueDate(tasks),
+    [tasks],
+  );
+  const recentCompleted = completed.slice(0, 8);
 
   async function handleComplete(task: TaskJson) {
     setBusyId(task.id);
@@ -138,6 +141,12 @@ export function Maintenance() {
             Systems
           </Button>
         </Link>
+        <Link to="/maintenance/archive">
+          <Button size="sm" variant="secondary">
+            <Archive className="h-3.5 w-3.5" />
+            Archive
+          </Button>
+        </Link>
         <Button
           size="sm"
           variant="ghost"
@@ -167,7 +176,8 @@ export function Maintenance() {
           overdue={overdue}
           dueSoon={dueSoon}
           upcoming={upcoming}
-          completed={completed}
+          completed={recentCompleted}
+          completedTotal={completed.length}
           subtitleFor={(t) => componentLabel.get(t.componentId)}
           onComplete={handleComplete}
           onCancel={handleCancel}
