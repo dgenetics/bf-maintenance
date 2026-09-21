@@ -35,8 +35,12 @@ export function Maintenance() {
     setError(null);
     setLoading(true);
     try {
-      const list = await maintenanceApi.listTasks();
-      setTasks(list);
+      // Prefer filtered lists: bare GET /api/tasks 500s if orphan statuses exist.
+      const [open, done] = await Promise.all([
+        maintenanceApi.listTasks({ open: true }),
+        maintenanceApi.listTasks({ status: "COMPLETED" }),
+      ]);
+      setTasks([...open, ...done]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load tasks");
     } finally {

@@ -82,7 +82,14 @@ PY
 
 bare=$(curl -s -b "$jar" -o /tmp/bf-doctor-tasks-bare.json -w '%{http_code}' --max-time 15 \
   "$BASE/api/tasks" || echo "000")
-echo "GET /api/tasks (bare) -> $bare (informational; Maintenance.tsx currently calls bare)"
+echo "GET /api/tasks (bare) -> $bare"
+[[ "$bare" == "200" ]] || { echo "FAIL: bare /api/tasks must be 200"; rm -f "$jar"; exit 1; }
+python3 - <<'PY'
+import json
+data = json.load(open("/tmp/bf-doctor-tasks-bare.json"))
+assert isinstance(data, list), type(data)
+print(f"all_tasks_count: {len(data)}")
+PY
 
 rm -f "$jar"
 echo "doctor ok (instance healthy)"

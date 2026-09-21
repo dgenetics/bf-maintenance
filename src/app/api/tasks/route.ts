@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import type { TaskStatus } from "@/generated/prisma/client";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { mapTask, statusForDueDate } from "@/lib/maintenance";
+import {
+  mapTask,
+  sanitizeUnknownTaskStatuses,
+  statusForDueDate,
+} from "@/lib/maintenance";
 
 export const runtime = "nodejs";
 
@@ -50,16 +54,41 @@ export async function GET(req: Request) {
     ? { in: ["PENDING", "DUE_SOON", "OVERDUE"] }
     : statusExact;
 
-  const tasks = await db.maintenanceTask.findMany({
-    where: {
-      ...(statusFilter ? { status: statusFilter } : {}),
-      ...(componentId ? { componentId } : {}),
-      ...(scheduleId ? { scheduleId } : {}),
-    },
-    orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
-  });
+  // Heal orphan board-lane statuses (BACKLOG/ICEBOX/…) so Prisma enum reads succeed.
+  await sanitizeUnknownTaskStatuses(db);
 
-  return NextResponse.json(tasks.map(mapTask));
+  try {
+    const tasks = await db.maintenanceTask.findMany({
+      where: {
+        ...(statusFilter ? { status: statusFilter } : {}),
+        ...(componentId ? { componentId } : {}),
+        ...(scheduleId ? { scheduleId } : {}),
+      },
+      orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
+    });
+    return NextResponse.json(tasks.map(mapTask));
+  } catch (err) {
+    console.error("GET /api/tasks failed", err);
+    // One retry after sanitize in case filtered path still hit a bad row somehow.
+    await sanitizeUnknownTaskStatuses(db);
+    try {
+      const tasks = await db.maintenanceTask.findMany({
+        where: {
+          ...(statusFilter ? { status: statusFilter } : {}),
+          ...(componentId ? { componentId } : {}),
+          ...(scheduleId ? { scheduleId } : {}),
+        },
+        orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
+      });
+      return NextResponse.json(tasks.map(mapTask));
+    } catch (err2) {
+      console.error("GET /api/tasks retry failed", err2);
+      return NextResponse.json(
+        { error: "Failed to list tasks" },
+        { status: 500 },
+      );
+    }
+  }
 }
 
 export async function POST(req: Request) {

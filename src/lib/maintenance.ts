@@ -205,3 +205,14 @@ export function overdueRelativeLabel(
   const n = Math.floor(days);
   return `overdue ${n}d`;
 }
+
+/** Remap orphan status strings (e.g. kanban BACKLOG) so Prisma enum reads succeed. */
+export async function sanitizeUnknownTaskStatuses(
+  db: { $executeRawUnsafe: (sql: string) => Promise<unknown> },
+): Promise<number> {
+  // SQLite / Turso: UPDATE returns changes via execute; ignore count if unavailable.
+  const result = await db.$executeRawUnsafe(
+    `UPDATE "MaintenanceTask" SET "status" = 'PENDING' WHERE "status" NOT IN ('PENDING', 'DUE_SOON', 'OVERDUE', 'COMPLETED', 'CANCELLED')`,
+  );
+  return typeof result === "number" ? result : 0;
+}
