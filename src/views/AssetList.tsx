@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Plus, Search, Wrench } from 'lucide-react'
 import { useData } from '../context/DataContext'
@@ -10,8 +10,18 @@ import { Button, Card, Input, PageHeader, Select } from '../components/ui'
 export function AssetList() {
   const { assets } = useData()
   const [params, setParams] = useSearchParams()
-  const [query, setQuery] = useState('')
+  const query = params.get('q') ?? ''
   const category = params.get('category') ?? 'all'
+
+  function setQuery(next: string) {
+    const trimmed = next
+    if (trimmed.trim()) {
+      params.set('q', trimmed)
+    } else {
+      params.delete('q')
+    }
+    setParams(params, { replace: true })
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -42,11 +52,16 @@ export function AssetList() {
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [assets, category, query])
 
+  const filtering = Boolean(query.trim()) || category !== 'all'
+  const subtitle = filtering
+    ? `${filtered.length} of ${assets.length} system${assets.length === 1 ? '' : 's'}`
+    : `${assets.length} system${assets.length === 1 ? '' : 's'}`
+
   return (
     <div>
       <PageHeader
         title="Systems"
-        subtitle={`${assets.length} system${assets.length === 1 ? '' : 's'}`}
+        subtitle={subtitle}
         action={
           <Link to="/assets/new">
             <Button size="sm">
@@ -109,35 +124,40 @@ export function AssetList() {
         />
       ) : (
         <div className="space-y-2">
-          {filtered.map((asset) => (
-            <Link key={asset.id} to={`/assets/${asset.id}`}>
-              <Card className="mb-2">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-ink">
-                      {asset.name}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      {asset.category}
-                    </p>
-                    <p className="mt-1 truncate text-xs text-forest-800">
-                      {asset.components.length > 0
-                        ? `${asset.components.length} part${asset.components.length === 1 ? '' : 's'}: ${asset.components.map((c) => c.name).join(', ')}`
-                        : 'No components yet'}
-                    </p>
+          {filtered.map((asset) => {
+            const replaceTotal = systemReplacementTotal(asset)
+            return (
+              <Link key={asset.id} to={`/assets/${asset.id}`}>
+                <Card className="mb-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-ink">
+                        {asset.name}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        {asset.category}
+                      </p>
+                      <p className="mt-1 truncate text-xs text-forest-800">
+                        {asset.components.length > 0
+                          ? `${asset.components.length} part${asset.components.length === 1 ? '' : 's'}: ${asset.components.map((c) => c.name).join(', ')}`
+                          : 'No components yet'}
+                      </p>
+                    </div>
+                    {replaceTotal > 0 ? (
+                      <div className="shrink-0 text-right">
+                        <p className="text-[10px] font-semibold tracking-wide text-muted uppercase">
+                          Replace
+                        </p>
+                        <p className="text-sm font-semibold tabular-nums">
+                          {formatMoney(replaceTotal)}
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-[10px] font-semibold tracking-wide text-muted uppercase">
-                      Replace
-                    </p>
-                    <p className="text-sm font-semibold tabular-nums">
-                      {formatMoney(systemReplacementTotal(asset) || null)}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          ))}
+                </Card>
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

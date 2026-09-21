@@ -5,6 +5,7 @@ import { useData } from '../context/DataContext'
 import type { AssetInput } from '../types'
 import { emptyAssetInput } from '../lib/utils'
 import { AssetFormFields } from '../components/AssetFormFields'
+import { StickySaveBar } from '../components/StickySaveBar'
 import { Button, Card, PageHeader } from '../components/ui'
 
 export function AssetNew() {
@@ -38,25 +39,30 @@ export function AssetNew() {
       />
 
       <Card>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form id="asset-new-form" onSubmit={handleSubmit} className="space-y-4">
           <AssetFormFields
             value={value}
             onChange={(patch) => setValue((prev) => ({ ...prev, ...patch }))}
           />
-          <div className="flex justify-end gap-2 border-t border-cream-200 pt-4">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => navigate(-1)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!value.name.trim()}>
-              Save
-            </Button>
-          </div>
         </form>
       </Card>
+
+      <StickySaveBar>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => navigate(-1)}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          form="asset-new-form"
+          disabled={!value.name.trim()}
+        >
+          Save
+        </Button>
+      </StickySaveBar>
     </div>
   )
 }

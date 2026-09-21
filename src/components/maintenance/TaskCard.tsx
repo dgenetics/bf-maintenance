@@ -1,7 +1,10 @@
 "use client";
 
 import { format, parseISO } from "date-fns";
-import type { TaskJson } from "@/lib/maintenance";
+import {
+  overdueRelativeLabel,
+  type TaskJson,
+} from "@/lib/maintenance";
 import { Button, Card } from "../ui";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +47,9 @@ export function TaskCard({
     task.status === "DUE_SOON" ||
     task.status === "OVERDUE";
 
+  const overdueLabel =
+    open && task.dueDate ? overdueRelativeLabel(task.dueDate) : null;
+
   return (
     <Card className="space-y-2">
       <div className="flex items-start justify-between gap-2">
@@ -54,12 +60,24 @@ export function TaskCard({
           )}
           <p className="mt-1 text-xs text-muted">
             Due {format(parseISO(task.dueDate), "MMM d, yyyy")}
+            {overdueLabel ? (
+              <span className="font-medium text-red-800">
+                {" "}
+                · {overdueLabel}
+              </span>
+            ) : null}
             {task.completedAt
               ? ` · done ${format(parseISO(task.completedAt), "MMM d")}`
               : ""}
           </p>
         </div>
-        <StatusBadge status={task.status} />
+        {overdueLabel ? (
+          <span className="inline-flex rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-red-900 uppercase">
+            {overdueLabel}
+          </span>
+        ) : (
+          <StatusBadge status={task.status} />
+        )}
       </div>
       {task.description && (
         <p className="text-sm text-muted whitespace-pre-wrap">

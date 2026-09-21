@@ -1,14 +1,16 @@
 "use client";
 
+import { Link } from "react-router-dom";
 import type { TaskJson } from "@/lib/maintenance";
 import { TaskList } from "./TaskList";
-import { Card } from "../ui";
+import { Button, Card } from "../ui";
 
 export function UpcomingTasks({
   overdue,
   dueSoon,
   upcoming,
   completed,
+  completedTotal,
   subtitleFor,
   onComplete,
   onCancel,
@@ -18,6 +20,7 @@ export function UpcomingTasks({
   dueSoon: TaskJson[];
   upcoming: TaskJson[];
   completed?: TaskJson[];
+  completedTotal?: number;
   subtitleFor?: (task: TaskJson) => string | undefined;
   onComplete?: (task: TaskJson) => void;
   onCancel?: (task: TaskJson) => void;
@@ -56,9 +59,37 @@ export function UpcomingTasks({
         />
       </Section>
       {completed && completed.length > 0 && (
-        <Section title="Recently completed" count={completed.length} tone="good">
+        <Section
+          title="Recently completed"
+          count={completed.length}
+          tone="good"
+          action={
+            (completedTotal ?? 0) > completed.length ? (
+              <Link to="/maintenance/archive">
+                <Button size="sm" variant="ghost">
+                  View all {completedTotal}
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/maintenance/archive">
+                <Button size="sm" variant="ghost">
+                  Archive
+                </Button>
+              </Link>
+            )
+          }
+        >
           <TaskList tasks={completed} emptyMessage="" />
         </Section>
+      )}
+      {(!completed || completed.length === 0) && (completedTotal ?? 0) > 0 && (
+        <div className="text-center">
+          <Link to="/maintenance/archive">
+            <Button size="sm" variant="secondary">
+              View completed archive
+            </Button>
+          </Link>
+        </div>
       )}
     </div>
   );
@@ -68,11 +99,13 @@ function Section({
   title,
   count,
   tone,
+  action,
   children,
 }: {
   title: string;
   count: number;
   tone?: "alert" | "warn" | "good";
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -92,6 +125,7 @@ function Section({
         >
           {count}
         </span>
+        {action && <div className="ml-auto">{action}</div>}
       </div>
       <Card className="border-dashed bg-cream-50/50">{children}</Card>
     </section>

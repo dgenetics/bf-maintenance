@@ -11,6 +11,7 @@ import {
 import { formatMoney } from '../lib/utils'
 import { AssetFormFields } from '../components/AssetFormFields'
 import { ComponentsList } from '../components/ComponentsList'
+import { StickySaveBar } from '../components/StickySaveBar'
 import { Button, Card, PageHeader } from '../components/ui'
 
 function toInput(asset: Asset): AssetInput {
@@ -84,21 +85,21 @@ export function AssetDetail() {
             value={draft}
             onChange={(patch) => setDraft((prev) => ({ ...prev!, ...patch }))}
           />
-          <div className="flex justify-end gap-2 border-t border-cream-200 pt-4">
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setEditing(false)
-                setDraft(null)
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={saveEdit} disabled={!draft.name.trim()}>
-              Save changes
-            </Button>
-          </div>
         </Card>
+        <StickySaveBar>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setEditing(false)
+              setDraft(null)
+            }}
+          >
+            Cancel
+          </Button>
+          <Button onClick={saveEdit} disabled={!draft.name.trim()}>
+            Save changes
+          </Button>
+        </StickySaveBar>
       </div>
     )
   }

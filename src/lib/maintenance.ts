@@ -120,3 +120,88 @@ function startOfUtcDay(d: Date): Date {
     Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
   );
 }
+
+const OPEN_STATUSES = new Set(["PENDING", "DUE_SOON", "OVERDUE"]);
+
+export function isOpenTaskStatus(status: string): boolean {
+  return OPEN_STATUSES.has(status);
+}
+
+export type DateBucket = "overdue" | "dueSoon" | "upcoming";
+
+/**
+ * Calendar bucket for an open task by due date vs today (UTC day),
+ * independent of stored status (which can go stale).
+ * - overdue: due < start of today
+ * - dueSoon: due >= today && due <= today+7
+ * - upcoming: due > today+7
+ * Undated open tasks are treated as upcoming (API always requires dueDate today).
+ */
+export function dateBucketForTask(
+  task: Pick<TaskJson, "dueDate" | "status">,
+  now = new Date(),
+): DateBucket | null {
+  if (!isOpenTaskStatus(task.status)) return null;
+  if (!task.dueDate) return "upcoming";
+  const due = new Date(task.dueDate);
+  if (Number.isNaN(due.getTime())) return "upcoming";
+  const derived = statusForDueDate(due, now);
+  if (derived === "OVERDUE") return "overdue";
+  if (derived === "DUE_SOON") return "dueSoon";
+  return "upcoming";
+}
+
+export function partitionTasksByDueDate(
+  tasks: TaskJson[],
+  now = new Date(),
+): {
+  overdue: TaskJson[];
+  dueSoon: TaskJson[];
+  upcoming: TaskJson[];
+  completed: TaskJson[];
+} {
+  const overdue: TaskJson[] = [];
+  const dueSoon: TaskJson[] = [];
+  const upcoming: TaskJson[] = [];
+  const completed: TaskJson[] = [];
+
+  for (const t of tasks) {
+    if (t.status === "COMPLETED") {
+      completed.push(t);
+      continue;
+    }
+    if (t.status === "CANCELLED") continue;
+    const bucket = dateBucketForTask(t, now);
+    if (bucket === "overdue") overdue.push(t);
+    else if (bucket === "dueSoon") dueSoon.push(t);
+    else if (bucket === "upcoming") upcoming.push(t);
+  }
+
+  const byDueAsc = (a: TaskJson, b: TaskJson) =>
+    new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+  overdue.sort(byDueAsc);
+  dueSoon.sort(byDueAsc);
+  upcoming.sort(byDueAsc);
+  completed.sort(
+    (a, b) =>
+      new Date(b.completedAt ?? b.updatedAt).getTime() -
+      new Date(a.completedAt ?? a.updatedAt).getTime(),
+  );
+
+  return { overdue, dueSoon, upcoming, completed };
+}
+
+/** Relative overdue label e.g. "overdue 38d"; null if not overdue. */
+export function overdueRelativeLabel(
+  dueDate: string,
+  now = new Date(),
+): string | null {
+  const due = new Date(dueDate);
+  if (Number.isNaN(due.getTime())) return null;
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const days =
+    (startOfUtcDay(now).getTime() - startOfUtcDay(due).getTime()) / msPerDay;
+  if (days < 1) return null;
+  const n = Math.floor(days);
+  return `overdue ${n}d`;
+}
