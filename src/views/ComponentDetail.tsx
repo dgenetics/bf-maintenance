@@ -1,11 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import {
   ArrowLeft,
+  MoreHorizontal,
   Plus,
+  Search,
   Trash2,
 } from "lucide-react";
 import { useData } from "@/context/DataContext";
@@ -14,12 +22,53 @@ import type { ScheduleJson, TaskJson } from "@/lib/maintenance";
 import { ScheduleForm } from "@/components/maintenance/ScheduleForm";
 import { TaskList } from "@/components/maintenance/TaskList";
 import { StatusBadge } from "@/components/maintenance/TaskCard";
-import { Button, Card, PageHeader } from "@/components/ui";
+import { Button, Card, Input, PageHeader } from "@/components/ui";
+import type { Asset } from "@/types";
+
+function Sheet({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-40 flex items-end justify-center sm:items-center">
+      <button
+        type="button"
+        aria-label="Close"
+        className="absolute inset-0 bg-ink/40"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="relative z-10 flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl border border-cream-200 bg-cream-50 shadow-xl sm:mx-4 sm:rounded-2xl"
+      >
+        <div className="flex items-center justify-between border-b border-cream-200 px-4 py-3">
+          <h3 className="text-base font-semibold text-ink">{title}</h3>
+          <Button size="sm" variant="ghost" onClick={onClose}>
+            Close
+          </Button>
+        </div>
+        <div className="overflow-y-auto px-4 py-4">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 export function ComponentDetail() {
   const { systemId, componentId } = useParams();
   const navigate = useNavigate();
-  const { getAsset, refresh: refreshSystems } = useData();
+  const {
+    assets,
+    getAsset,
+    refresh: refreshSystems,
+    updateComponent,
+  } = useData();
   const system = systemId ? getAsset(systemId) : undefined;
   const component = system?.components.find((c) => c.id === componentId);
 
@@ -31,6 +80,34 @@ export function ComponentDetail() {
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [moveQuery, setMoveQuery] = useState("");
+  const [moveTarget, setMoveTarget] = useState<Asset | null>(null);
+  const [moving, setMoving] = useState(false);
+  const [moveError, setMoveError] = useState<string | null>(null);
+
+  const otherSystems = useMemo(
+    () =>
+      assets
+        .filter((a) => a.id !== systemId)
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [assets, systemId],
+  );
+  const hasOtherSystems = otherSystems.length > 0;
+
+  const filteredSystems = useMemo(() => {
+    const needle = moveQuery.trim().toLowerCase();
+    if (!needle) return otherSystems;
+    return otherSystems.filter(
+      (a) =>
+        a.name.toLowerCase().includes(needle) ||
+        a.category.toLowerCase().includes(needle),
+    );
+  }, [otherSystems, moveQuery]);
 
   const load = useCallback(async () => {
     if (!componentId) return;
@@ -53,6 +130,49 @@ export function ComponentDetail() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [menuOpen]);
+
+  const closeMoveSheet = () => {
+    setMoveOpen(false);
+    setMoveQuery("");
+    setMoveTarget(null);
+    setMoveError(null);
+    setMoving(false);
+  };
+
+  const openMoveSheet = () => {
+    setMenuOpen(false);
+    setMoveQuery("");
+    setMoveTarget(null);
+    setMoveError(null);
+    setMoveOpen(true);
+  };
+
+  const handleMove = async () => {
+    if (!systemId || !componentId || !moveTarget || !component) return;
+    setMoving(true);
+    setMoveError(null);
+    try {
+      await updateComponent(systemId, componentId, {
+        systemId: moveTarget.id,
+      });
+      const newId = moveTarget.id;
+      closeMoveSheet();
+      navigate(`/assets/${newId}/components/${componentId}`);
+    } catch (e) {
+      setMoveError(e instanceof Error ? e.message : "Failed to move");
+      setMoving(false);
+    }
+  };
 
   if (!system || !component || !componentId) {
     return (
@@ -87,6 +207,49 @@ export function ComponentDetail() {
       <PageHeader
         title={component.name}
         subtitle={`${system.name}${component.location ? ` · ${component.location}` : ""}`}
+        action={
+          <div className="relative" ref={menuRef}>
+            <button
+              type="button"
+              className="rounded-lg p-1.5 text-muted hover:bg-cream-100 hover:text-ink"
+              aria-label="Component actions"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 z-10 mt-1 w-56 overflow-hidden rounded-xl border border-cream-200 bg-white py-1 shadow-lg"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={!hasOtherSystems}
+                  title={
+                    hasOtherSystems
+                      ? undefined
+                      : "No other systems to move to."
+                  }
+                  className="block w-full px-3 py-2 text-left text-sm hover:bg-cream-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+                  onClick={() => {
+                    if (!hasOtherSystems) return;
+                    openMoveSheet();
+                  }}
+                >
+                  Move to another system…
+                </button>
+                {!hasOtherSystems && (
+                  <p className="px-3 pb-2 text-xs text-muted">
+                    No other systems to move to.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        }
       />
 
       {error && (
@@ -260,6 +423,102 @@ export function ComponentDetail() {
       >
         View system: {system.name}
       </Link>
+
+      {moveOpen && (
+        <Sheet
+          title={
+            moveTarget
+              ? "Move to another system"
+              : "Move to another system"
+          }
+          onClose={closeMoveSheet}
+        >
+          {moveError && (
+            <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">
+              {moveError}
+            </p>
+          )}
+
+          {moveTarget ? (
+            <div className="space-y-4">
+              <p className="text-sm text-ink">
+                Move “{component.name}” to “{moveTarget.name}”?
+              </p>
+              <p className="text-sm text-muted">
+                Schedules and chores stay with this part.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  disabled={moving}
+                  onClick={() => void handleMove()}
+                >
+                  {moving ? "Moving…" : "Move"}
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={moving}
+                  onClick={() => {
+                    setMoveTarget(null);
+                    setMoveError(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted">
+                Schedules and chores stay with this part.
+              </p>
+              {!hasOtherSystems ? (
+                <p className="text-sm text-muted">
+                  No other systems to move to.
+                </p>
+              ) : (
+                <>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted" />
+                    <Input
+                      value={moveQuery}
+                      onChange={(e) => setMoveQuery(e.target.value)}
+                      placeholder="Search systems"
+                      aria-label="Search systems"
+                      className="pl-9"
+                      autoComplete="off"
+                    />
+                  </div>
+                  {filteredSystems.length === 0 ? (
+                    <p className="text-sm text-muted">No matches</p>
+                  ) : (
+                    <ul className="divide-y divide-cream-200 overflow-hidden rounded-xl border border-cream-200 bg-white">
+                      {filteredSystems.map((a) => (
+                        <li key={a.id}>
+                          <button
+                            type="button"
+                            className="flex w-full items-baseline justify-between gap-3 px-3 py-2.5 text-left hover:bg-forest-50"
+                            onClick={() => {
+                              setMoveTarget(a);
+                              setMoveError(null);
+                            }}
+                          >
+                            <span className="font-medium text-ink">
+                              {a.name}
+                            </span>
+                            <span className="shrink-0 text-xs text-muted">
+                              {a.category}
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </Sheet>
+      )}
     </div>
   );
 }

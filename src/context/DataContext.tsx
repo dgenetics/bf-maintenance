@@ -15,6 +15,7 @@ import type {
   AssetInput,
   SystemComponent,
   SystemComponentInput,
+  SystemComponentPatch,
 } from "@/types";
 
 interface DataContextValue {
@@ -33,7 +34,7 @@ interface DataContextValue {
   updateComponent: (
     assetId: string,
     componentId: string,
-    patch: Partial<SystemComponentInput>,
+    patch: SystemComponentPatch,
   ) => Promise<void>;
   deleteComponent: (assetId: string, componentId: string) => Promise<void>;
   duplicateComponent: (
@@ -112,16 +113,29 @@ export function DataProvider({ children }: { children: ReactNode }) {
     async (
       assetId: string,
       componentId: string,
-      patch: Partial<SystemComponentInput>,
+      patch: SystemComponentPatch,
     ) => {
+      // Reparent: persist then reload both systems so registries stay honest.
+      if (patch.systemId !== undefined && patch.systemId !== assetId) {
+        try {
+          await api.updateComponent(assetId, componentId, patch);
+          await refresh();
+        } catch (e) {
+          await refresh();
+          throw e;
+        }
+        return;
+      }
+
       // Optimistic local merge (inputs keep their own draft while focused)
+      const { systemId: _ignored, ...fieldPatch } = patch;
       setAssets((prev) =>
         prev.map((a) =>
           a.id === assetId
             ? {
                 ...a,
                 components: a.components.map((c) =>
-                  c.id === componentId ? { ...c, ...patch } : c,
+                  c.id === componentId ? { ...c, ...fieldPatch } : c,
                 ),
                 updatedAt: new Date().toISOString(),
               }
@@ -131,7 +145,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       try {
         // Persist full draft fields; do not re-apply server payload over
         // local state (avoids races that glitch typing).
-        await api.updateComponent(assetId, componentId, patch);
+        await api.updateComponent(assetId, componentId, fieldPatch);
       } catch (e) {
         await refresh();
         throw e;

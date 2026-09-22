@@ -37,3 +37,4 @@ Each feature file: H1 + one paragraph, then exactly four H2s — `Sub-features`,
 - [Sticky save](./sticky-save.md) — Save above bottom tab nav.
 - [Schedules](./schedules.md) — per-component maintenance schedules.
 - [Auto-materialize](./auto-materialize.md) — Chores load materializes open tasks from schedules (no Suggest button).
+- [Move component](./move-component.md) — reparent a part to another system from component detail.
