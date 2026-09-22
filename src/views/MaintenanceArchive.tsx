@@ -102,7 +102,7 @@ export function MaintenanceArchive() {
         to="/maintenance"
         className="flex items-center gap-1 text-sm text-muted hover:text-ink"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to maintenance
+        <ArrowLeft className="h-4 w-4" /> Back to chores
       </Link>
 
       <PageHeader

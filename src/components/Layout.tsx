@@ -4,13 +4,13 @@ import { cn } from '../lib/utils'
 
 const nav = [
   { to: '/', label: 'Systems', icon: Wrench, end: true },
-  { to: '/maintenance', label: 'Maintenance', icon: CalendarClock, end: false },
+  { to: '/maintenance', label: 'Chores', icon: CalendarClock, end: false },
   { to: '/schedules', label: 'Schedules', icon: CalendarRange, end: false },
 ]
 
 function headerBadge(pathname: string): string {
   if (pathname.startsWith('/schedules')) return 'Schedules'
-  if (pathname.startsWith('/maintenance')) return 'Maintenance'
+  if (pathname.startsWith('/maintenance')) return 'Chores'
   return 'Systems'
 }
 
