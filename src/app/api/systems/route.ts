@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { componentCreateData, mapSystem } from "@/lib/mappers";
+import { normalizeCategory } from "@/types";
 
 export const runtime = "nodejs";
 
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
   const created = await db.system.create({
     data: {
       name: body.name.trim(),
-      category: body.category?.trim() || "Other",
+      category: normalizeCategory(body.category ?? ""),
       notes: body.notes ?? "",
       components: {
         create: components

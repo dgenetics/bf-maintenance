@@ -2,7 +2,13 @@ import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Plus, Search, Wrench } from 'lucide-react'
 import { useData } from '../context/DataContext'
-import { ASSET_CATEGORIES, systemReplacementTotal } from '../types'
+import {
+  ASSET_CATEGORIES,
+  normalizeCategory,
+  systemReplacementTotal,
+  type Asset,
+  type AssetCategory,
+} from '../types'
 import { formatMoney } from '../lib/utils'
 import { EmptyState } from '../components/EmptyState'
 import { Button, Card, Input, PageHeader, Select } from '../components/ui'
@@ -27,7 +33,9 @@ export function AssetList() {
     const q = query.trim().toLowerCase()
     return [...assets]
       .filter((a) => {
-        if (category !== 'all' && a.category !== category) return false
+        if (category !== 'all' && normalizeCategory(a.category) !== category) {
+          return false
+        }
         if (!q) return true
         const hay = [
           a.name,
@@ -51,6 +59,27 @@ export function AssetList() {
       })
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [assets, category, query])
+
+  const sections = useMemo(() => {
+    const byCategory = new Map<AssetCategory, Asset[]>()
+    for (const cat of ASSET_CATEGORIES) {
+      byCategory.set(cat, [])
+    }
+    for (const asset of filtered) {
+      const bucket = normalizeCategory(asset.category)
+      byCategory.get(bucket)!.push(asset)
+    }
+
+    const order =
+      category !== 'all' &&
+      (ASSET_CATEGORIES as readonly string[]).includes(category)
+        ? [category as AssetCategory]
+        : [...ASSET_CATEGORIES]
+
+    return order
+      .map((cat) => ({ category: cat, items: byCategory.get(cat) ?? [] }))
+      .filter((section) => section.items.length > 0)
+  }, [filtered, category])
 
   const filtering = Boolean(query.trim()) || category !== 'all'
   const subtitle = filtering
@@ -123,41 +152,53 @@ export function AssetList() {
           }
         />
       ) : (
-        <div className="space-y-2">
-          {filtered.map((asset) => {
-            const replaceTotal = systemReplacementTotal(asset)
-            return (
-              <Link key={asset.id} to={`/assets/${asset.id}`}>
-                <Card className="mb-2">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-ink">
-                        {asset.name}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted">
-                        {asset.category}
-                      </p>
-                      <p className="mt-1 truncate text-xs text-forest-800">
-                        {asset.components.length > 0
-                          ? `${asset.components.length} part${asset.components.length === 1 ? '' : 's'}: ${asset.components.map((c) => c.name).join(', ')}`
-                          : 'No components yet'}
-                      </p>
-                    </div>
-                    {replaceTotal > 0 ? (
-                      <div className="shrink-0 text-right">
-                        <p className="text-[10px] font-semibold tracking-wide text-muted uppercase">
-                          Replace
-                        </p>
-                        <p className="text-sm font-semibold tabular-nums">
-                          {formatMoney(replaceTotal)}
-                        </p>
-                      </div>
-                    ) : null}
-                  </div>
-                </Card>
-              </Link>
-            )
-          })}
+        <div className="space-y-5">
+          {sections.map((section) => (
+            <section key={section.category}>
+              <div className="mb-2 flex items-center gap-2">
+                <h3 className="text-xs font-semibold tracking-wide text-forest-800 uppercase">
+                  {section.category}
+                </h3>
+                <span className="rounded-full bg-cream-200 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted">
+                  {section.items.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {section.items.map((asset) => {
+                  const replaceTotal = systemReplacementTotal(asset)
+                  const partCount = asset.components.length
+                  return (
+                    <Link key={asset.id} to={`/assets/${asset.id}`}>
+                      <Card className="mb-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold text-ink">
+                              {asset.name}
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted">
+                              {partCount > 0
+                                ? `${partCount} part${partCount === 1 ? '' : 's'}`
+                                : 'No parts yet'}
+                            </p>
+                          </div>
+                          {replaceTotal > 0 ? (
+                            <div className="shrink-0 text-right">
+                              <p className="text-[10px] font-semibold tracking-wide text-muted uppercase">
+                                Replace
+                              </p>
+                              <p className="text-sm font-semibold tabular-nums">
+                                {formatMoney(replaceTotal)}
+                              </p>
+                            </div>
+                          ) : null}
+                        </div>
+                      </Card>
+                    </Link>
+                  )
+                })}
+              </div>
+            </section>
+          ))}
         </div>
       )}
     </div>

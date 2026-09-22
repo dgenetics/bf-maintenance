@@ -1,5 +1,5 @@
 import type { AssetInput } from '../types'
-import { ASSET_CATEGORIES } from '../types'
+import { ASSET_CATEGORIES, normalizeCategory } from '../types'
 import { Field, Input, Select, Textarea } from './ui'
 
 export function AssetFormFields({
@@ -27,8 +27,8 @@ export function AssetFormFields({
         <Field label="Category" htmlFor="category">
           <Select
             id="category"
-            value={value.category}
-            onChange={(e) => onChange({ category: e.target.value })}
+            value={normalizeCategory(value.category)}
+            onChange={(e) => onChange({ category: normalizeCategory(e.target.value) })}
           >
             {ASSET_CATEGORIES.map((c) => (
               <option key={c} value={c}>
