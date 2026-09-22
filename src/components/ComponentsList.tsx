@@ -6,11 +6,17 @@ import {
   ChevronRight,
   Copy,
   ExternalLink,
+  MoreHorizontal,
   Plus,
   Trash2,
 } from 'lucide-react'
+import { useData } from '../context/DataContext'
 import type { SystemComponent, SystemComponentInput } from '../types'
 import { emptyComponentInput, formatMoney, parseMoney } from '../lib/utils'
+import {
+  hasOtherSystemsToMoveTo,
+  MoveComponentSheet,
+} from './MoveComponentSheet'
 import { Button, Card, Field, Input, Textarea } from './ui'
 
 function moneyToInput(value: number | null): string {
@@ -292,6 +298,78 @@ function EditableComponent({
   )
 }
 
+
+function PartRowMenu({
+  partName,
+  hasOtherSystems,
+  onMove,
+}: {
+  partName: string
+  hasOtherSystems: boolean
+  onMove: () => void
+}) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDoc = (e: MouseEvent) => {
+      if (!menuRef.current) return
+      if (!menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [menuOpen])
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        type="button"
+        className="mt-0.5 text-muted hover:text-ink"
+        aria-label={`More actions for ${partName}`}
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+        title="More"
+        onClick={(e) => {
+          e.stopPropagation()
+          setMenuOpen((v) => !v)
+        }}
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      {menuOpen && (
+        <div
+          role="menu"
+          className="absolute right-0 z-10 mt-1 w-56 overflow-hidden rounded-xl border border-cream-200 bg-white py-1 shadow-lg"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!hasOtherSystems}
+            title={
+              hasOtherSystems ? undefined : 'No other systems to move to.'
+            }
+            className="block w-full px-3 py-2 text-left text-sm hover:bg-cream-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+            onClick={(e) => {
+              e.stopPropagation()
+              if (!hasOtherSystems) return
+              setMenuOpen(false)
+              onMove()
+            }}
+          >
+            Move to another system…
+          </button>
+          {!hasOtherSystems && (
+            <p className="px-3 pb-2 text-xs text-muted">
+              No other systems to move to.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function ComponentsList({
   systemId,
   components,
@@ -319,6 +397,9 @@ export function ComponentsList({
   const [expandedId, setExpandedId] = useState<string | null>(null)
   // Live title while editing so the row header doesn't lag / fight the input
   const [liveNames, setLiveNames] = useState<Record<string, string>>({})
+  const { assets } = useData()
+  const hasOtherSystems = hasOtherSystemsToMoveTo(assets, systemId)
+  const [movePart, setMovePart] = useState<SystemComponent | null>(null)
 
   async function submitNew() {
     if (!draft.name.trim()) return
@@ -328,7 +409,9 @@ export function ComponentsList({
   }
 
   return (
+    <>
     <Card>
+
       <div className="mb-3 flex items-center justify-between gap-2">
         <div>
           <h3 className="text-xs font-semibold tracking-wide text-forest-800 uppercase">
@@ -450,6 +533,11 @@ export function ComponentsList({
                   >
                     <CalendarClock className="h-4 w-4" />
                   </Link>
+                  <PartRowMenu
+                    partName={displayName}
+                    hasOtherSystems={hasOtherSystems}
+                    onMove={() => setMovePart(part)}
+                  />
                   <button
                     type="button"
                     className="mt-0.5 text-muted hover:text-forest-800"
@@ -496,6 +584,28 @@ export function ComponentsList({
           })}
         </ul>
       )}
+
     </Card>
+
+      {movePart && (
+        <MoveComponentSheet
+          open={!!movePart}
+          onClose={() => setMovePart(null)}
+          componentId={movePart.id}
+          componentName={liveNames[movePart.id] ?? movePart.name}
+          currentSystemId={systemId}
+          systems={assets}
+          onMoved={() => {
+            setMovePart(null)
+            setExpandedId((cur) => (cur === movePart.id ? null : cur))
+            setLiveNames((m) => {
+              const next = { ...m }
+              delete next[movePart.id]
+              return next
+            })
+          }}
+        />
+      )}
+    </>
   )
 }

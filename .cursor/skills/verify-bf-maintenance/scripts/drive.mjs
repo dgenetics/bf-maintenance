@@ -385,15 +385,19 @@ async function driveMoveComponent(page, out, pin) {
     throw new Error("no component available for move");
   }
 
-  await page.goto(`/assets/${source.id}/components/${component.id}`, {
-    waitUntil: "networkidle",
-  });
+  // Primary entry: system (AssetDetail) page part-row ⋯ menu — not ComponentDetail.
+  await page.goto(`/assets/${source.id}`, { waitUntil: "networkidle" });
   await page
-    .getByRole("heading", { level: 2, name: component.name, exact: true })
+    .getByRole("heading", { level: 2, name: source.name, exact: true })
     .waitFor({ timeout: 20000 });
-  steps.push(`on component detail: ${component.name}`);
+  await page.getByText(component.name, { exact: true }).first().waitFor({
+    timeout: 10000,
+  });
+  steps.push(`on system detail: ${source.name}, part ${component.name}`);
 
-  await page.getByLabel("Component actions").click();
+  await page
+    .getByLabel(`More actions for ${component.name}`)
+    .click();
   const moveItem = page.getByRole("menuitem", {
     name: "Move to another system…",
   });
@@ -407,7 +411,7 @@ async function driveMoveComponent(page, out, pin) {
     .getByText("Schedules and chores stay with this part.", { exact: true })
     .waitFor();
   await page.getByLabel("Search systems").waitFor();
-  steps.push("move sheet open with helper + search");
+  steps.push("move sheet open from part-row ⋯");
   await screenshot(page, join(out, "move-component-sheet.png"));
 
   await page.getByLabel("Search systems").fill(target.name);
@@ -422,14 +426,20 @@ async function driveMoveComponent(page, out, pin) {
   await screenshot(page, join(out, "move-component-confirm.png"));
 
   await page.getByRole("button", { name: "Move", exact: true }).click();
-  await page.waitForURL(
-    new RegExp(`/assets/${target.id}/components/${component.id}`),
-    { timeout: 20000 },
-  );
+  // Stay on the source system detail — do not navigate to ComponentDetail.
+  await page.waitForURL(new RegExp(`/assets/${source.id}/?$`), {
+    timeout: 20000,
+  });
   await page
-    .getByRole("heading", { level: 2, name: component.name, exact: true })
+    .getByRole("heading", { level: 2, name: source.name, exact: true })
     .waitFor();
-  steps.push(`navigated to /assets/${target.id}/components/${component.id}`);
+  // Part should disappear from this system's list after refresh.
+  await page
+    .getByText(component.name, { exact: true })
+    .waitFor({ state: "detached", timeout: 15000 });
+  steps.push(
+    `stayed on /assets/${source.id}; part removed from current system list`,
+  );
 
   const after = await api("GET", "/api/systems");
   const srcAfter = after.find((s) => s.id === source.id);
