@@ -28,4 +28,4 @@ Preconditions:
 ## Gotchas
 
 - Live production data is real farm state — do not leave verify-* schedules behind.
-- Suggest tasks (separate feature) needs at least one schedule to create work.
+- Auto-materialize on Chores (separate feature) needs at least one schedule to create work.

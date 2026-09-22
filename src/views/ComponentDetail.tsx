@@ -6,7 +6,6 @@ import { format, parseISO } from "date-fns";
 import {
   ArrowLeft,
   Plus,
-  RefreshCw,
   Trash2,
 } from "lucide-react";
 import { useData } from "@/context/DataContext";
@@ -31,7 +30,6 @@ export function ComponentDetail() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [suggesting, setSuggesting] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -89,42 +87,6 @@ export function ComponentDetail() {
       <PageHeader
         title={component.name}
         subtitle={`${system.name}${component.location ? ` · ${component.location}` : ""}`}
-        action={
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={suggesting}
-            onClick={() => {
-              void (async () => {
-                setSuggesting(true);
-                setError(null);
-                setInfo(null);
-                try {
-                  const result =
-                    await maintenanceApi.suggestTasks(componentId);
-                  await load();
-                  setInfo(
-                    result.message ??
-                      (result.created.length
-                        ? `Created ${result.created.length} task(s).`
-                        : "No new tasks created."),
-                  );
-                } catch (e) {
-                  setError(
-                    e instanceof Error ? e.message : "Suggest failed",
-                  );
-                } finally {
-                  setSuggesting(false);
-                }
-              })();
-            }}
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${suggesting ? "animate-spin" : ""}`}
-            />
-            Suggest tasks
-          </Button>
-        }
       />
 
       {error && (
@@ -164,6 +126,7 @@ export function ComponentDetail() {
             <ScheduleForm
               componentId={componentId}
               busy={saving}
+              embedActions
               onCancel={() => setShowForm(false)}
               onSubmit={async (input) => {
                 setSaving(true);
@@ -240,7 +203,7 @@ export function ComponentDetail() {
         </h3>
         <TaskList
           tasks={openTasks}
-          emptyMessage="No open tasks. Use Suggest tasks or add a schedule."
+          emptyMessage="No open tasks. Add a schedule, or open Chores to materialize."
           busyId={busyId}
           onComplete={(task) => {
             void (async () => {

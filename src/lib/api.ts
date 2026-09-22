@@ -57,11 +57,20 @@ export type CreateTaskInput = {
 };
 
 export type SuggestResult = {
-  componentId: string;
+  componentId?: string;
   created: TaskJson[];
   refreshed: TaskJson[];
   skipped: { scheduleId: string; reason: string }[];
-  openTasks: TaskJson[];
+  openTasks?: TaskJson[];
+  message?: string;
+};
+
+export type SuggestAllResult = {
+  all: true;
+  created: TaskJson[];
+  refreshed: TaskJson[];
+  skipped: { scheduleId: string; reason: string }[];
+  componentsProcessed: number;
   message?: string;
 };
 
@@ -130,9 +139,11 @@ export const maintenanceApi = {
       body: JSON.stringify({ status: "CANCELLED" }),
     }),
 
-  suggestTasks: (componentId: string, all = false) => {
-    const sp = new URLSearchParams({ componentId });
-    if (all) sp.set("all", "1");
-    return request<SuggestResult>(`/api/tasks/suggest?${sp}`);
-  },
+  suggestTasks: (componentId: string) =>
+    request<SuggestResult>(
+      `/api/tasks/suggest?componentId=${encodeURIComponent(componentId)}`,
+    ),
+
+  materializeAllTasks: () =>
+    request<SuggestAllResult>(`/api/tasks/suggest?all=1`),
 };
