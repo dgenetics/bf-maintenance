@@ -38,7 +38,8 @@ if [[ ! -f "$VERIFY_DB" ]]; then
   if [[ -f "$REPO_ROOT/dev.db" ]]; then
     cp "$REPO_ROOT/dev.db" "$VERIFY_DB"
   else
-    DATABASE_URL="file:$VERIFY_DB" npx prisma db push --skip-generate
+    # Prisma 7 dropped --skip-generate on db push; generate already ran above.
+    DATABASE_URL="file:$VERIFY_DB" npx prisma db push
   fi
 fi
 
