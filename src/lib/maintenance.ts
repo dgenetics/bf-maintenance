@@ -129,6 +129,32 @@ export function isOpenTaskStatus(status: string): boolean {
 
 export type DateBucket = "overdue" | "dueSoon" | "upcoming";
 
+/** Urgency chip for a schedule plan from nextDueDate only (N=7 days). */
+export function urgencyForNextDueDate(
+  nextDueDate: string,
+  now = new Date(),
+): DateBucket {
+  const due = new Date(nextDueDate);
+  if (Number.isNaN(due.getTime())) return "upcoming";
+  const derived = statusForDueDate(due, now);
+  if (derived === "OVERDUE") return "overdue";
+  if (derived === "DUE_SOON") return "dueSoon";
+  return "upcoming";
+}
+
+export function frequencyLabel(
+  frequency: string | null,
+  intervalDays: number | null,
+): string {
+  if (!frequency && intervalDays == null) return "—";
+  const opt = FREQUENCY_OPTIONS.find((o) => o.value === frequency);
+  if (opt && opt.value !== "custom") return opt.label;
+  if (intervalDays != null) return `Every ${intervalDays}d`;
+  if (frequency) return frequency;
+  return "—";
+}
+
+
 /**
  * Calendar bucket for an open task by due date vs today (UTC day),
  * independent of stored status (which can go stale).

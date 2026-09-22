@@ -1,14 +1,23 @@
-import { NavLink, Outlet } from 'react-router-dom'
-import { CalendarClock, Plus, Wrench } from 'lucide-react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { CalendarClock, CalendarRange, Wrench } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 const nav = [
   { to: '/', label: 'Systems', icon: Wrench, end: true },
   { to: '/maintenance', label: 'Maintenance', icon: CalendarClock, end: false },
-  { to: '/assets/new', label: 'Add', icon: Plus, end: false },
+  { to: '/schedules', label: 'Schedules', icon: CalendarRange, end: false },
 ]
 
+function headerBadge(pathname: string): string {
+  if (pathname.startsWith('/schedules')) return 'Schedules'
+  if (pathname.startsWith('/maintenance')) return 'Maintenance'
+  return 'Systems'
+}
+
 export function Layout() {
+  const { pathname } = useLocation()
+  const badge = headerBadge(pathname)
+
   return (
     <div className="mx-auto flex min-h-dvh max-w-3xl flex-col bg-cream-50 shadow-sm sm:border-x sm:border-cream-200">
       <header className="sticky top-0 z-20 border-b border-cream-200 bg-forest-900 text-cream-50">
@@ -22,7 +31,7 @@ export function Layout() {
             </h1>
           </div>
           <div className="rounded-full bg-forest-800 px-3 py-1 text-xs text-cream-200">
-            Systems
+            {badge}
           </div>
         </div>
       </header>

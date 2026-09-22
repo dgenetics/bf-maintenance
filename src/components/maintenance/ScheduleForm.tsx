@@ -6,27 +6,75 @@ import type { CreateScheduleInput } from "@/lib/api";
 import { StickySaveBar } from "../StickySaveBar";
 import { Button, Field, Input, Select, Textarea } from "../ui";
 
-export function ScheduleForm({
-  componentId,
-  onSubmit,
-  onCancel,
-  busy,
-}: {
-  componentId: string;
-  onSubmit: (input: CreateScheduleInput) => Promise<void> | void;
-  onCancel?: () => void;
-  busy?: boolean;
-}) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [frequency, setFrequency] = useState("90d");
-  const [customDays, setCustomDays] = useState("30");
-  const [nextDueDate, setNextDueDate] = useState(() => {
+export type ScheduleFormInitial = {
+  name?: string;
+  description?: string | null;
+  frequency?: string | null;
+  intervalDays?: number | null;
+  isRecurring?: boolean;
+  nextDueDate?: string;
+};
+
+function resolveFrequency(
+  frequency: string | null | undefined,
+  intervalDays: number | null | undefined,
+): { frequency: string; customDays: string } {
+  if (frequency && FREQUENCY_OPTIONS.some((o) => o.value === frequency)) {
+    return {
+      frequency,
+      customDays: String(intervalDays ?? 30),
+    };
+  }
+  if (frequency === "custom" || (intervalDays != null && intervalDays > 0)) {
+    return { frequency: "custom", customDays: String(intervalDays ?? 30) };
+  }
+  return { frequency: "90d", customDays: "30" };
+}
+
+function toDateInput(iso: string | undefined): string {
+  if (!iso) {
     const d = new Date();
     d.setDate(d.getDate() + 30);
     return d.toISOString().slice(0, 10);
-  });
-  const [isRecurring, setIsRecurring] = useState(true);
+  }
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) {
+    const fallback = new Date();
+    fallback.setDate(fallback.getDate() + 30);
+    return fallback.toISOString().slice(0, 10);
+  }
+  return d.toISOString().slice(0, 10);
+}
+
+export function ScheduleForm({
+  componentId,
+  initial,
+  onSubmit,
+  onCancel,
+  busy,
+  formId = "schedule-form",
+  submitLabel = "Save schedule",
+  embedActions = false,
+}: {
+  componentId: string;
+  initial?: ScheduleFormInitial;
+  onSubmit: (input: CreateScheduleInput) => Promise<void> | void;
+  onCancel?: () => void;
+  busy?: boolean;
+  formId?: string;
+  submitLabel?: string;
+  /** Inline Cancel/Save for sheets (avoids fixed bar clipping). */
+  embedActions?: boolean;
+}) {
+  const resolved = resolveFrequency(initial?.frequency, initial?.intervalDays);
+  const [name, setName] = useState(initial?.name ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [frequency, setFrequency] = useState(resolved.frequency);
+  const [customDays, setCustomDays] = useState(resolved.customDays);
+  const [nextDueDate, setNextDueDate] = useState(() =>
+    toDateInput(initial?.nextDueDate),
+  );
+  const [isRecurring, setIsRecurring] = useState(initial?.isRecurring ?? true);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -42,7 +90,7 @@ export function ScheduleForm({
     }
 
     const opt = FREQUENCY_OPTIONS.find((o) => o.value === frequency);
-    let intervalDays: number | null =
+    const intervalDays: number | null =
       frequency === "custom"
         ? Number(customDays) || null
         : (opt?.days ?? null);
@@ -64,7 +112,7 @@ export function ScheduleForm({
 
   return (
     <form
-      id="schedule-form"
+      id={formId}
       onSubmit={(e) => void handleSubmit(e)}
       className="space-y-3"
     >
@@ -124,27 +172,37 @@ export function ScheduleForm({
         Recurring (create next task when completed)
       </label>
       {error && <p className="text-xs font-medium text-red-700">{error}</p>}
-      <StickySaveBar>
-        {onCancel && (
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            disabled={busy}
-            onClick={onCancel}
-          >
-            Cancel
-          </Button>
-        )}
-        <Button
-          type="submit"
-          form="schedule-form"
-          size="sm"
-          disabled={busy || !name.trim()}
-        >
-          {busy ? "Saving…" : "Save schedule"}
-        </Button>
-      </StickySaveBar>
+      {(() => {
+        const actions = (
+          <>
+            {onCancel && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={busy}
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+            )}
+            <Button
+              type="submit"
+              form={formId}
+              size="sm"
+              disabled={busy || !name.trim()}
+            >
+              {busy ? "Saving…" : submitLabel}
+            </Button>
+          </>
+        );
+        if (embedActions) {
+          return (
+            <div className="flex justify-end gap-2 pt-2">{actions}</div>
+          );
+        }
+        return <StickySaveBar>{actions}</StickySaveBar>;
+      })()}
     </form>
   );
 }
