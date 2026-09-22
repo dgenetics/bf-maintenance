@@ -126,6 +126,7 @@ export function ComponentDetail() {
             <ScheduleForm
               componentId={componentId}
               busy={saving}
+              embedActions
               onCancel={() => setShowForm(false)}
               onSubmit={async (input) => {
                 setSaving(true);
