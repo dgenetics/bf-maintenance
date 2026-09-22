@@ -1,10 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import {
   ArrowLeft,
+  MoreHorizontal,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -14,12 +20,20 @@ import type { ScheduleJson, TaskJson } from "@/lib/maintenance";
 import { ScheduleForm } from "@/components/maintenance/ScheduleForm";
 import { TaskList } from "@/components/maintenance/TaskList";
 import { StatusBadge } from "@/components/maintenance/TaskCard";
+import {
+  hasOtherSystemsToMoveTo,
+  MoveComponentSheet,
+} from "@/components/MoveComponentSheet";
 import { Button, Card, PageHeader } from "@/components/ui";
 
 export function ComponentDetail() {
   const { systemId, componentId } = useParams();
   const navigate = useNavigate();
-  const { getAsset, refresh: refreshSystems } = useData();
+  const {
+    assets,
+    getAsset,
+    refresh: refreshSystems,
+  } = useData();
   const system = systemId ? getAsset(systemId) : undefined;
   const component = system?.components.find((c) => c.id === componentId);
 
@@ -31,6 +45,14 @@ export function ComponentDetail() {
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [moveOpen, setMoveOpen] = useState(false);
+
+  const hasOtherSystems = systemId
+    ? hasOtherSystemsToMoveTo(assets, systemId)
+    : false;
 
   const load = useCallback(async () => {
     if (!componentId) return;
@@ -53,6 +75,21 @@ export function ComponentDetail() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [menuOpen]);
+
+  const openMoveSheet = () => {
+    setMenuOpen(false);
+    setMoveOpen(true);
+  };
 
   if (!system || !component || !componentId) {
     return (
@@ -87,6 +124,49 @@ export function ComponentDetail() {
       <PageHeader
         title={component.name}
         subtitle={`${system.name}${component.location ? ` · ${component.location}` : ""}`}
+        action={
+          <div className="relative" ref={menuRef}>
+            <button
+              type="button"
+              className="rounded-lg p-1.5 text-muted hover:bg-cream-100 hover:text-ink"
+              aria-label="Component actions"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 z-10 mt-1 w-56 overflow-hidden rounded-xl border border-cream-200 bg-white py-1 shadow-lg"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={!hasOtherSystems}
+                  title={
+                    hasOtherSystems
+                      ? undefined
+                      : "No other systems to move to."
+                  }
+                  className="block w-full px-3 py-2 text-left text-sm hover:bg-cream-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+                  onClick={() => {
+                    if (!hasOtherSystems) return;
+                    openMoveSheet();
+                  }}
+                >
+                  Move to another system…
+                </button>
+                {!hasOtherSystems && (
+                  <p className="px-3 pb-2 text-xs text-muted">
+                    No other systems to move to.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        }
       />
 
       {error && (
@@ -260,6 +340,20 @@ export function ComponentDetail() {
       >
         View system: {system.name}
       </Link>
+
+      {systemId && componentId && (
+        <MoveComponentSheet
+          open={moveOpen}
+          onClose={() => setMoveOpen(false)}
+          componentId={componentId}
+          componentName={component.name}
+          currentSystemId={systemId}
+          systems={assets}
+          onMoved={(newSystemId) => {
+            navigate(`/assets/${newSystemId}/components/${componentId}`);
+          }}
+        />
+      )}
     </div>
   );
 }

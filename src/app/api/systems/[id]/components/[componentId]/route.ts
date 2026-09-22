@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { mapComponent } from "@/lib/mappers";
-import type { SystemComponentInput } from "@/types";
+import type { SystemComponentPatch } from "@/types";
 
 export const runtime = "nodejs";
 
@@ -12,7 +12,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const denied = await requireAuth();
   if (denied) return denied;
   const { id: systemId, componentId } = await ctx.params;
-  const body = (await req.json()) as Partial<SystemComponentInput>;
+  const body = (await req.json()) as SystemComponentPatch;
   const db = getDb();
 
   const existing = await db.component.findFirst({
@@ -22,9 +22,31 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const targetSystemId =
+    body.systemId !== undefined ? body.systemId : undefined;
+
+  if (targetSystemId !== undefined) {
+    if (targetSystemId === systemId) {
+      return NextResponse.json(
+        { error: "Component is already in this system" },
+        { status: 400 },
+      );
+    }
+    const target = await db.system.findUnique({
+      where: { id: targetSystemId },
+    });
+    if (!target) {
+      return NextResponse.json(
+        { error: "Target system not found" },
+        { status: 404 },
+      );
+    }
+  }
+
   const updated = await db.component.update({
     where: { id: componentId },
     data: {
+      ...(targetSystemId !== undefined ? { systemId: targetSystemId } : {}),
       ...(body.name !== undefined ? { name: body.name } : {}),
       ...(body.location !== undefined ? { location: body.location } : {}),
       ...(body.modelNumber !== undefined
@@ -70,12 +92,22 @@ export async function PATCH(req: Request, ctx: Ctx) {
     },
   });
 
+  const now = new Date();
   await db.system.update({
     where: { id: systemId },
-    data: { updatedAt: new Date() },
+    data: { updatedAt: now },
   });
+  if (targetSystemId !== undefined && targetSystemId !== systemId) {
+    await db.system.update({
+      where: { id: targetSystemId },
+      data: { updatedAt: now },
+    });
+  }
 
-  return NextResponse.json(mapComponent(updated));
+  return NextResponse.json({
+    ...mapComponent(updated),
+    systemId: updated.systemId,
+  });
 }
 
 export async function DELETE(_req: Request, ctx: Ctx) {

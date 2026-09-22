@@ -29,6 +29,11 @@ export interface SystemComponent {
 
 export type SystemComponentInput = Omit<SystemComponent, 'id'>
 
+/** Fields allowed on component PATCH (includes reparent via systemId). */
+export type SystemComponentPatch = Partial<SystemComponentInput> & {
+  systemId?: string
+}
+
 /** A house/property system made up of one or more components. */
 export interface Asset {
   id: string

@@ -3,6 +3,7 @@ import type {
   AssetInput,
   SystemComponent,
   SystemComponentInput,
+  SystemComponentPatch,
 } from "@/types";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -67,7 +68,7 @@ export const api = {
   updateComponent: (
     systemId: string,
     componentId: string,
-    patch: Partial<SystemComponentInput>,
+    patch: SystemComponentPatch,
   ) =>
     request<SystemComponent>(
       `/api/systems/${systemId}/components/${componentId}`,

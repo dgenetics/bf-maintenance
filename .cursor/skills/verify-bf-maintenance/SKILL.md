@@ -3,7 +3,7 @@ name: verify-bf-maintenance
 description: >-
   Drive bf-maintenance (Beausoleil Farm date/schedule maintenance web app) like
   a user: launch, doctor instance health, Playwright paths for pin gate /
-  systems / buckets / archive / sticky save / schedules / auto-materialize. Use before merge/ship or when asked
+  systems / buckets / archive / sticky save / schedules / auto-materialize / move-component. Use before merge/ship or when asked
   to verify this repo. Not AiEA kanban.
 ---
 
@@ -70,7 +70,7 @@ node .cursor/skills/verify-bf-maintenance/scripts/drive.mjs \
   --run-id "$VERIFY_RUN_ID"
 ```
 
-Features: `pin-gate` | `systems-list` | `maintenance-buckets` | `archive` | `sticky-save` | `schedules` | `auto-materialize`.
+Features: `pin-gate` | `systems-list` | `maintenance-buckets` | `archive` | `sticky-save` | `schedules` | `auto-materialize` | `move-component`.
 
 Stable handles: `getByLabel('Access PIN')`, `getByRole('button', { name: 'Unlock' })`, `getByLabel('Search systems')`, nav link `Chores`, page headings via `getByRole('heading', { level: 2, name: ... })` for `Systems` / `Chores` / `Completed archive` / `Add system` (Layout chrome is a separate h1 `Maintenance` — never use bare `heading` name `Maintenance` for the page title).
 

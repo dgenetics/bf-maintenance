@@ -10,6 +10,7 @@
  *   node drive.mjs --feature sticky-save ...
  *   node drive.mjs --feature schedules ...
  *   node drive.mjs --feature auto-materialize ...
+ *   node drive.mjs --feature move-component ...
  *
  * Env: VERIFY_BASE_URL / SMOKE_BASE_URL, BF_ACCESS_PIN, VERIFY_RUN_ID
  * Evidence written under ../evidence/<run-id>/
@@ -289,6 +290,173 @@ async function driveAutoMaterialize(page, out, pin) {
   return steps;
 }
 
+
+async function driveMoveComponent(page, out, pin) {
+  const steps = [];
+  await page.goto("/", { waitUntil: "networkidle" });
+  if (await page.getByLabel("Access PIN").count()) {
+    await unlock(page, pin);
+  }
+
+  // Use in-page fetch so we share the browser cookie jar from unlock.
+  // (page.request can miss Secure cookies on http://127.0.0.1 under next start.)
+  async function api(method, path, body) {
+    return page.evaluate(
+      async ({ method, path, body }) => {
+        const res = await fetch(path, {
+          method,
+          credentials: "same-origin",
+          headers: body
+            ? { "Content-Type": "application/json" }
+            : undefined,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        const text = await res.text();
+        let data = null;
+        if (text) {
+          try {
+            data = JSON.parse(text);
+          } catch {
+            data = text;
+          }
+        }
+        if (!res.ok) {
+          const msg =
+            data && typeof data === "object" && data.error
+              ? data.error
+              : text || res.statusText;
+          throw new Error(`${method} ${path} failed: ${res.status} ${msg}`);
+        }
+        return data;
+      },
+      { method, path, body: body ?? null },
+    );
+  }
+
+  let systems = await api("GET", "/api/systems");
+  steps.push(`systems loaded: ${systems.length}`);
+
+  async function createSystem(name, category) {
+    return api("POST", "/api/systems", {
+      name,
+      category,
+      notes: "",
+      components: [],
+    });
+  }
+
+  async function addComponent(systemId, name) {
+    return api("POST", `/api/systems/${systemId}/components`, {
+      name,
+      location: "",
+      modelNumber: "",
+      productNumber: "",
+      serialNumber: "",
+      manufacturer: "",
+      warrantyInfo: "",
+      userManual: "",
+      vendorName: "",
+      vendorContact: "",
+      serviceCompanyName: "",
+      serviceCompanyContact: "",
+      purchaseDate: null,
+      purchaseCost: null,
+      replacementCost: null,
+      notes: "",
+    });
+  }
+
+  const stamp = `verify-move-${Date.now()}`;
+  let source = systems.find((s) => (s.components?.length ?? 0) > 0);
+  let target = systems.find((s) => !source || s.id !== source.id);
+  if (!source) {
+    source = await createSystem(`${stamp}-source`, "Other");
+    const comp = await addComponent(source.id, `${stamp}-part`);
+    source = { ...source, components: [comp] };
+    steps.push("seeded source system + component");
+  }
+  if (!target || target.id === source.id) {
+    target = await createSystem(`${stamp}-target`, "HVAC");
+    steps.push("seeded target system");
+  }
+
+  const component = source.components[0];
+  if (!component) {
+    throw new Error("no component available for move");
+  }
+
+  // Primary entry: system (AssetDetail) page part-row ⋯ menu — not ComponentDetail.
+  await page.goto(`/assets/${source.id}`, { waitUntil: "networkidle" });
+  await page
+    .getByRole("heading", { level: 2, name: source.name, exact: true })
+    .waitFor({ timeout: 20000 });
+  await page.getByText(component.name, { exact: true }).first().waitFor({
+    timeout: 10000,
+  });
+  steps.push(`on system detail: ${source.name}, part ${component.name}`);
+
+  await page
+    .getByLabel(`More actions for ${component.name}`)
+    .click();
+  const moveItem = page.getByRole("menuitem", {
+    name: "Move to another system…",
+  });
+  await moveItem.waitFor({ timeout: 5000 });
+  if (await moveItem.isDisabled()) {
+    throw new Error("Move menu item disabled but we seeded ≥2 systems");
+  }
+  await moveItem.click();
+  await page.getByRole("dialog", { name: "Move to another system" }).waitFor();
+  await page
+    .getByText("Schedules and chores stay with this part.", { exact: true })
+    .waitFor();
+  await page.getByLabel("Search systems").waitFor();
+  steps.push("move sheet open from part-row ⋯");
+  await screenshot(page, join(out, "move-component-sheet.png"));
+
+  await page.getByLabel("Search systems").fill(target.name);
+  await page.waitForTimeout(200);
+  await page.getByRole("button", { name: target.name }).click();
+  await page
+    .getByText(`Move “${component.name}” to “${target.name}”?`, {
+      exact: true,
+    })
+    .waitFor({ timeout: 5000 });
+  steps.push("confirm step shown");
+  await screenshot(page, join(out, "move-component-confirm.png"));
+
+  await page.getByRole("button", { name: "Move", exact: true }).click();
+  // Stay on the source system detail — do not navigate to ComponentDetail.
+  await page.waitForURL(new RegExp(`/assets/${source.id}/?$`), {
+    timeout: 20000,
+  });
+  await page
+    .getByRole("heading", { level: 2, name: source.name, exact: true })
+    .waitFor();
+  // Part should disappear from this system's list after refresh.
+  await page
+    .getByText(component.name, { exact: true })
+    .waitFor({ state: "detached", timeout: 15000 });
+  steps.push(
+    `stayed on /assets/${source.id}; part removed from current system list`,
+  );
+
+  const after = await api("GET", "/api/systems");
+  const srcAfter = after.find((s) => s.id === source.id);
+  const tgtAfter = after.find((s) => s.id === target.id);
+  if (srcAfter?.components?.some((c) => c.id === component.id)) {
+    throw new Error("source system still lists moved component");
+  }
+  if (!tgtAfter?.components?.some((c) => c.id === component.id)) {
+    throw new Error("target system missing moved component");
+  }
+  steps.push("API registry: component left source, on target");
+  await screenshot(page, join(out, "move-component-done.png"));
+  await ariaDump(page, join(out, "move-component.aria.txt"));
+  return steps;
+}
+
+
 const FEATURES = {
   "pin-gate": drivePinGate,
   "systems-list": driveSystemsList,
@@ -297,6 +465,7 @@ const FEATURES = {
   "sticky-save": driveStickySave,
   schedules: driveSchedules,
   "auto-materialize": driveAutoMaterialize,
+  "move-component": driveMoveComponent,
 };
 
 async function main() {
