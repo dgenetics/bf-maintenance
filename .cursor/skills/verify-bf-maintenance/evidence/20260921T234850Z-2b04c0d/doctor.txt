@@ -1,0 +1,15 @@
+== doctor bf-maintenance ==
+base: https://bf-maintenance.vercel.app
+repo_sha: 2b04c0d
+package_version: 0.1.0
+GET / -> 200
+POST /api/auth/login wrong pin -> 401
+POST /api/auth/login right pin -> 200
+GET /api/auth/me -> 200 {"authenticated":true}
+GET /api/systems -> 200
+systems_count: 33
+GET /api/tasks?open=1 -> 200
+open_tasks_count: 4
+GET /api/tasks (bare) -> 200
+all_tasks_count: 7
+doctor ok (instance healthy)

@@ -22,9 +22,9 @@ Preconditions:
 - `BF_ACCESS_PIN` matches the instance.
 - Fresh browser context (no prior `bf_session`).
 
-- **See lock screen.** Open `/`. Run `node scripts/drive.mjs --feature pin-gate --base-url <url>`. Heading `Maintenance access` and textbox `Access PIN` appear; capture `pin-gate-locked.png`.
+- **See lock screen.** Open `/`. Run `node scripts/drive.mjs --feature pin-gate --base-url <url>`. Heading `getByRole('heading', { level: 1, name: 'Maintenance access' })` and textbox `Access PIN` appear; capture `pin-gate-locked.png`.
 - **Reject wrong PIN.** Fill `Access PIN` with `__wrong__`, click `Unlock`. Status `Incorrect PIN` appears; still locked. Capture `pin-gate-wrong.png`.
-- **Unlock.** Fill `Access PIN` with `$BF_ACCESS_PIN`, click `Unlock`. Heading `Systems` and chrome `Beausoleil Farm` appear. Capture `pin-gate-unlocked.png` + aria JSON.
+- **Unlock.** Fill `Access PIN` with `$BF_ACCESS_PIN`, click `Unlock`. Page heading `getByRole('heading', { level: 2, name: 'Systems', exact: true })` and chrome `Beausoleil Farm` appear. Capture `pin-gate-unlocked.png` + aria JSON.
 - **Proof.** Artifacts show locked → error → Systems. Optional: `GET /api/auth/me` with the session cookie returns authenticated (doctor already covers this).
 
 ## Gotchas

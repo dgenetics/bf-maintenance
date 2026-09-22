@@ -84,7 +84,7 @@ async function unlock(page, pin) {
   await page.getByLabel("Access PIN").waitFor({ timeout: 20000 });
   await page.getByLabel("Access PIN").fill(pin);
   await page.getByRole("button", { name: "Unlock" }).click();
-  await page.getByRole("heading", { name: "Systems" }).waitFor({
+  await page.getByRole("heading", { level: 2, name: "Systems", exact: true }).waitFor({
     timeout: 20000,
   });
 }
@@ -92,7 +92,7 @@ async function unlock(page, pin) {
 async function drivePinGate(page, out, pin) {
   const steps = [];
   await page.goto("/", { waitUntil: "networkidle" });
-  await page.getByRole("heading", { name: "Maintenance access" }).waitFor();
+  await page.getByRole("heading", { level: 1, name: "Maintenance access", exact: true }).waitFor();
   await screenshot(page, join(out, "pin-gate-locked.png"));
   await ariaDump(page, join(out, "pin-gate-locked.aria.txt"));
   steps.push("locked: heading Maintenance access visible");
@@ -105,7 +105,7 @@ async function drivePinGate(page, out, pin) {
 
   await page.getByLabel("Access PIN").fill(pin);
   await page.getByRole("button", { name: "Unlock" }).click();
-  await page.getByRole("heading", { name: "Systems" }).waitFor({
+  await page.getByRole("heading", { level: 2, name: "Systems", exact: true }).waitFor({
     timeout: 20000,
   });
   await page.getByText("Beausoleil Farm").first().waitFor();
@@ -121,7 +121,7 @@ async function driveSystemsList(page, out, pin) {
   if (await page.getByLabel("Access PIN").count()) {
     await unlock(page, pin);
   }
-  await page.getByRole("heading", { name: "Systems" }).waitFor();
+  await page.getByRole("heading", { level: 2, name: "Systems", exact: true }).waitFor();
   const search = page.getByLabel("Search systems");
   await search.fill("xyzzy-no-match-verify");
   await page.waitForTimeout(300);
@@ -158,7 +158,7 @@ async function driveMaintenanceBuckets(page, out, pin) {
   }
   await page.getByRole("link", { name: "Maintenance" }).click();
   await page.waitForURL(/\/maintenance/);
-  await page.getByRole("heading", { name: "Maintenance" }).waitFor();
+  await page.getByRole("heading", { level: 2, name: "Maintenance", exact: true }).waitFor();
   for (const title of ["Overdue", "Due soon", "Upcoming"]) {
     await page.getByText(title, { exact: true }).first().waitFor({
       timeout: 15000,
@@ -177,7 +177,7 @@ async function driveArchive(page, out, pin) {
     await unlock(page, pin);
   }
   await page.goto("/maintenance/archive", { waitUntil: "networkidle" });
-  await page.getByRole("heading", { name: "Completed archive" }).waitFor({
+  await page.getByRole("heading", { level: 2, name: "Completed archive", exact: true }).waitFor({
     timeout: 20000,
   });
   await screenshot(page, join(out, "archive.png"));
@@ -193,7 +193,7 @@ async function driveStickySave(page, out, pin) {
     await unlock(page, pin);
   }
   await page.goto("/assets/new", { waitUntil: "networkidle" });
-  await page.getByRole("heading", { name: "Add system" }).waitFor();
+  await page.getByRole("heading", { level: 2, name: "Add system", exact: true }).waitFor();
   const save = page.getByRole("button", { name: "Save" });
   await save.waitFor();
   const box = await save.boundingBox();

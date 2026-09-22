@@ -72,7 +72,7 @@ node .cursor/skills/verify-bf-maintenance/scripts/drive.mjs \
 
 Features: `pin-gate` | `systems-list` | `maintenance-buckets` | `archive` | `sticky-save`.
 
-Stable handles: `getByLabel('Access PIN')`, `getByRole('button', { name: 'Unlock' })`, `getByLabel('Search systems')`, nav link `Maintenance`, headings `Systems` / `Maintenance` / `Completed archive` / `Add system`.
+Stable handles: `getByLabel('Access PIN')`, `getByRole('button', { name: 'Unlock' })`, `getByLabel('Search systems')`, nav link `Maintenance`, page headings via `getByRole('heading', { level: 2, name: ... })` for `Systems` / `Maintenance` / `Completed archive` / `Add system` (Layout chrome is a separate h1 `Maintenance` — never use bare `heading` name `Maintenance`).
 
 Recipes live in `features/`. Prefer those over inventing selectors.
 
