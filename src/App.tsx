@@ -12,6 +12,7 @@ import { AssetDetail } from "./views/AssetDetail";
 import { ComponentDetail } from "./views/ComponentDetail";
 import { Maintenance } from "./views/Maintenance";
 import { MaintenanceArchive } from "./views/MaintenanceArchive";
+import { Schedules } from "./views/Schedules";
 
 const SW_RELOAD_KEY = "bf-sw-cleaned";
 
@@ -56,6 +57,7 @@ function LoadingShell() {
         <Route index element={<AssetList />} />
         <Route path="maintenance" element={<Maintenance />} />
         <Route path="maintenance/archive" element={<MaintenanceArchive />} />
+        <Route path="schedules" element={<Schedules />} />
         <Route path="assets" element={<Navigate to="/" replace />} />
         <Route path="assets/new" element={<AssetNew />} />
         <Route

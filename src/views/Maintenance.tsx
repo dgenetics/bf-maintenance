@@ -119,7 +119,7 @@ export function Maintenance() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Maintenance"
+        title="Chores"
         subtitle="Upcoming work across systems & components"
         action={
           <div className="flex gap-2">
