@@ -582,7 +582,7 @@ export function Schedules() {
                           </button>
                           {meta && (
                             <Link
-                              to={`/assets/${meta.systemId}/components/${s.componentId}`}
+                              to={`/assets/${meta.systemId}?part=${s.componentId}`}
                               className="block w-full px-3 py-2 text-left text-sm hover:bg-cream-100"
                               onClick={() => setMenuId(null)}
                             >

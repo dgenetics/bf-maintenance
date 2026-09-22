@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import {
   CalendarClock,
   ChevronDown,
@@ -394,12 +394,48 @@ export function ComponentsList({
   const [draft, setDraft] = useState<SystemComponentInput>(() =>
     emptyComponentInput(),
   )
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const partFromUrl = searchParams.get('part')
+  const [expandedId, setExpandedId] = useState<string | null>(partFromUrl)
   // Live title while editing so the row header doesn't lag / fight the input
   const [liveNames, setLiveNames] = useState<Record<string, string>>({})
   const { assets } = useData()
   const hasOtherSystems = hasOtherSystemsToMoveTo(assets, systemId)
   const [movePart, setMovePart] = useState<SystemComponent | null>(null)
+  const partRowRefs = useRef<Record<string, HTMLLIElement | null>>({})
+
+  // Auto-expand + scroll to ?part= on mount / when the query changes
+  useEffect(() => {
+    if (!partFromUrl) return
+    if (!components.some((c) => c.id === partFromUrl)) return
+    setExpandedId(partFromUrl)
+    // Scroll after expand paints
+    const t = window.setTimeout(() => {
+      partRowRefs.current[partFromUrl]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      })
+    }, 50)
+    return () => window.clearTimeout(t)
+  }, [partFromUrl, components])
+
+  function setPartParam(partId: string | null) {
+    const next = new URLSearchParams(searchParams)
+    if (partId) next.set('part', partId)
+    else next.delete('part')
+    setSearchParams(next, { replace: true })
+  }
+
+  function expandPart(partId: string) {
+    setExpandedId(partId)
+    setPartParam(partId)
+  }
+
+  function togglePart(partId: string) {
+    const nextId = expandedId === partId ? null : partId
+    setExpandedId(nextId)
+    setPartParam(nextId)
+  }
 
   async function submitNew() {
     if (!draft.name.trim()) return
@@ -487,16 +523,20 @@ export function ComponentsList({
             ].filter(Boolean)
 
             return (
-              <li key={part.id} className="py-2 first:pt-0 last:pb-0">
+              <li
+                key={part.id}
+                className="py-2 first:pt-0 last:pb-0"
+                ref={(el) => {
+                  partRowRefs.current[part.id] = el
+                }}
+              >
                 <div className="flex items-start gap-2">
                   <button
                     type="button"
                     className="mt-0.5 text-muted hover:text-ink"
                     aria-expanded={open}
                     aria-label={open ? 'Collapse' : 'Expand'}
-                    onClick={() =>
-                      setExpandedId((cur) => (cur === part.id ? null : part.id))
-                    }
+                    onClick={() => togglePart(part.id)}
                   >
                     {open ? (
                       <ChevronDown className="h-4 w-4" />
@@ -507,9 +547,7 @@ export function ComponentsList({
                   <button
                     type="button"
                     className="min-w-0 flex-1 text-left"
-                    onClick={() =>
-                      setExpandedId((cur) => (cur === part.id ? null : part.id))
-                    }
+                    onClick={() => togglePart(part.id)}
                   >
                     <p className="font-medium text-ink">{displayName}</p>
                     <p className="truncate text-xs text-muted">
@@ -524,15 +562,24 @@ export function ComponentsList({
                       </p>
                     )}
                   </button>
-                  <Link
-                    to={`/assets/${systemId}/components/${part.id}`}
+                  <button
+                    type="button"
                     className="mt-0.5 text-muted hover:text-forest-800"
-                    title="Maintenance schedules"
-                    aria-label={`Maintenance for ${displayName}`}
-                    onClick={(e) => e.stopPropagation()}
+                    title="View component"
+                    aria-label={`View ${displayName}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      expandPart(part.id)
+                      window.setTimeout(() => {
+                        partRowRefs.current[part.id]?.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'nearest',
+                        })
+                      }, 50)
+                    }}
                   >
                     <CalendarClock className="h-4 w-4" />
-                  </Link>
+                  </button>
                   <PartRowMenu
                     partName={displayName}
                     hasOtherSystems={hasOtherSystems}
