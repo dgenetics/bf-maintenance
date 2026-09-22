@@ -163,35 +163,30 @@ export function AssetList() {
                   {section.items.length}
                 </span>
               </div>
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
                 {section.items.map((asset) => {
                   const replaceTotal = systemReplacementTotal(asset)
                   const partCount = asset.components.length
                   return (
-                    <Link key={asset.id} to={`/assets/${asset.id}`}>
-                      <Card className="mb-2">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate font-semibold text-ink">
-                              {asset.name}
-                            </p>
-                            <p className="mt-0.5 text-xs text-muted">
-                              {partCount > 0
-                                ? `${partCount} part${partCount === 1 ? '' : 's'}`
-                                : 'No parts yet'}
-                            </p>
-                          </div>
-                          {replaceTotal > 0 ? (
-                            <div className="shrink-0 text-right">
-                              <p className="text-[10px] font-semibold tracking-wide text-muted uppercase">
-                                Replace
-                              </p>
-                              <p className="text-sm font-semibold tabular-nums">
-                                {formatMoney(replaceTotal)}
-                              </p>
-                            </div>
-                          ) : null}
-                        </div>
+                    <Link
+                      key={asset.id}
+                      to={`/assets/${asset.id}`}
+                      className="block min-w-0"
+                    >
+                      <Card className="h-full !p-3">
+                        <p className="line-clamp-2 font-semibold text-ink">
+                          {asset.name}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted">
+                          {partCount > 0
+                            ? `${partCount} part${partCount === 1 ? '' : 's'}`
+                            : 'No parts yet'}
+                        </p>
+                        {replaceTotal > 0 ? (
+                          <p className="mt-1 text-xs font-semibold tabular-nums text-muted">
+                            {formatMoney(replaceTotal)}
+                          </p>
+                        ) : null}
                       </Card>
                     </Link>
                   )
