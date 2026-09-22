@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Archive, CalendarClock, Wrench } from "lucide-react";
+import { Archive, CalendarClock } from "lucide-react";
 import { maintenanceApi } from "@/lib/api";
 import {
   partitionTasksByDueDate,
@@ -96,12 +96,6 @@ export function Maintenance() {
       />
 
       <div className="flex flex-wrap gap-2">
-        <Link to="/">
-          <Button size="sm" variant="secondary">
-            <Wrench className="h-3.5 w-3.5" />
-            Systems
-          </Button>
-        </Link>
         <Link to="/maintenance/archive">
           <Button size="sm" variant="secondary">
             <Archive className="h-3.5 w-3.5" />

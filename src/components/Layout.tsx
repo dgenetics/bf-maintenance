@@ -36,7 +36,7 @@ export function Layout() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-4 py-4 pb-24">
+      <main className="flex-1 overflow-y-auto px-4 py-4 pb-[calc(3.5rem+1rem+env(safe-area-inset-bottom,0px))]">
         <Outlet />
       </main>
 
