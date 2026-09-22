@@ -1,0 +1,85 @@
+# Poteto verify gate for bf-maintenance.
+# Requires repo secret BF_ACCESS_PIN (same PIN the app unlocks with).
+name: verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: build + poteto gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      BF_ACCESS_PIN: ${{ secrets.BF_ACCESS_PIN }}
+      # Local verify DB only — not Turso
+      DATABASE_URL: file:./dev.db
+      BF_INTEGRATION_SECRET: ci-local-integration-secret
+      CI: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require BF_ACCESS_PIN secret
+        run: |
+          if [ -z "${BF_ACCESS_PIN}" ]; then
+            echo "::error::Repo secret BF_ACCESS_PIN is required for verify. Set it under Settings → Secrets and variables → Actions (same PIN used to unlock the app)."
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Write .env for local instance
+        run: |
+          printf '%s\n' \
+            "DATABASE_URL=\"file:./dev.db\"" \
+            "BF_ACCESS_PIN=\"${BF_ACCESS_PIN}\"" \
+            "BF_INTEGRATION_SECRET=\"${BF_INTEGRATION_SECRET}\"" \
+            > .env
+
+      - name: Install app deps
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Google Chrome (Playwright channel)
+        uses: browser-actions/setup-chrome@v1
+        id: chrome
+        with:
+          chrome-version: stable
+
+      - name: Install verify harness (playwright-core)
+        run: npm ci --prefix .cursor/skills/verify-bf-maintenance/scripts
+
+      - name: Poteto gate (local launch + doctor + pin-gate)
+        env:
+          # Prefer the Chrome we just installed when PATH differs
+          PLAYWRIGHT_CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+        run: |
+          export PATH="$(dirname "${PLAYWRIGHT_CHROME_PATH:-/usr/bin/google-chrome}"):$PATH"
+          chmod +x .cursor/skills/verify-bf-maintenance/scripts/*.sh
+          ./.cursor/skills/verify-bf-maintenance/scripts/gate.sh --local --feature pin-gate
+
+      - name: Upload verify evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-evidence-${{ github.run_id }}
+          path: .cursor/skills/verify-bf-maintenance/evidence/
+          if-no-files-found: ignore
+          retention-days: 14

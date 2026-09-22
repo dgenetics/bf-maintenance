@@ -243,11 +243,17 @@ async function main() {
   const out = join(EVIDENCE_ROOT, id);
   mkdirSync(out, { recursive: true });
 
-  const browser = await chromium.launch({
-    channel: "chrome",
+  const launchOpts = {
     headless: true,
     args: ["--no-sandbox", "--disable-dev-shm-usage"],
-  });
+  };
+  // CI may install Chrome outside Playwright's default channel paths.
+  if (process.env.PLAYWRIGHT_CHROME_PATH) {
+    launchOpts.executablePath = process.env.PLAYWRIGHT_CHROME_PATH;
+  } else {
+    launchOpts.channel = "chrome";
+  }
+  const browser = await chromium.launch(launchOpts);
   const context = await browser.newContext({
     viewport: { width: 1280, height: 900 },
     baseURL: base,

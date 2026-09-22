@@ -78,6 +78,21 @@ vercel --prod
 | GET/PATCH/DELETE | `/api/tasks/:id` | Task get / complete / cancel / delete |
 | GET | `/api/tasks/suggest?componentId=` | Generate tasks from due schedules |
 
+
+## CI (GitHub Actions)
+
+Workflow source: `ci/verify.yml` (copy to `.github/workflows/verify.yml` to enable Actions — GitHub requires the `workflow` OAuth scope to push that path via API/CLI).
+
+Once enabled, PRs and pushes to `main` run:
+
+1. `npm ci` + `npm run typecheck` + `npm run build`
+2. Local Next server via the verify skill `gate.sh --local`
+3. Instance **doctor** + Playwright **pin-gate** drive
+
+**Required secret:** `BF_ACCESS_PIN` (Settings → Secrets and variables → Actions) — same unlock PIN as production/local. Without it the verify job fails fast with a clear error.
+
+Evidence lands in the workflow artifact `verify-evidence-<run_id>`.
+
 ---
 
 *Built for Beausoleil Farm, Middletown MD.*
