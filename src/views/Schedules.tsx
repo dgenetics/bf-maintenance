@@ -522,6 +522,7 @@ export function Schedules() {
                   className={cn(
                     "relative !p-3",
                     highlightId === s.id && "ring-2 ring-forest-600/40",
+                    menuId === s.id && "z-30",
                   )}
                   onClick={() => setEditTarget(s)}
                 >
@@ -560,7 +561,7 @@ export function Schedules() {
                       </button>
                       {menuId === s.id && (
                         <div
-                          className="absolute right-0 z-10 mt-1 w-40 overflow-hidden rounded-xl border border-cream-200 bg-white py-1 shadow-lg"
+                          className="absolute right-0 z-50 mt-1 w-40 overflow-hidden rounded-xl border border-cream-200 bg-white py-1 shadow-lg"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <button
