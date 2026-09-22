@@ -9,25 +9,26 @@ import {
 
 export const runtime = "nodejs";
 
+type Skipped = { scheduleId: string; reason: string };
+
+type MaterializeResult = {
+  componentId: string;
+  created: TaskJson[];
+  refreshed: TaskJson[];
+  skipped: Skipped[];
+  openTasks: TaskJson[];
+  message: string;
+};
+
 /**
- * GET /api/tasks/suggest?componentId=xxx
- *
- * Creates an open MaintenanceTask for each schedule that does not already
- * have one. Idempotent. Also refreshes open-task statuses from due dates.
+ * Idempotent: create missing open tasks for each schedule on a component,
+ * and refresh open-task statuses from due dates.
  */
-export async function GET(req: Request) {
-  const denied = await requireAuth();
-  if (denied) return denied;
-
-  const componentId = new URL(req.url).searchParams.get("componentId")?.trim();
-  if (!componentId) {
-    return NextResponse.json(
-      { error: "componentId is required" },
-      { status: 400 },
-    );
-  }
-
-  const db = getDb();
+async function materializeForComponent(
+  db: ReturnType<typeof getDb>,
+  componentId: string,
+  now: Date,
+): Promise<MaterializeResult | { error: string; status: number }> {
   const component = await db.component.findUnique({
     where: { id: componentId },
     include: {
@@ -39,27 +40,23 @@ export async function GET(req: Request) {
   });
 
   if (!component) {
-    return NextResponse.json(
-      { error: "Component not found" },
-      { status: 404 },
-    );
+    return { error: "Component not found", status: 404 };
   }
 
   if (component.schedules.length === 0) {
-    return NextResponse.json({
+    return {
       componentId,
       created: [] as TaskJson[],
       refreshed: [] as TaskJson[],
-      skipped: [] as { scheduleId: string; reason: string }[],
+      skipped: [] as Skipped[],
       openTasks: [] as TaskJson[],
       message: "No schedules on this component — add a schedule first.",
-    });
+    };
   }
 
-  const now = new Date();
   const created: TaskJson[] = [];
   const refreshed: TaskJson[] = [];
-  const skipped: { scheduleId: string; reason: string }[] = [];
+  const skipped: Skipped[] = [];
 
   for (const task of component.tasks) {
     if (task.status === "COMPLETED" || task.status === "CANCELLED") continue;
@@ -125,12 +122,92 @@ export async function GET(req: Request) {
     message = "Nothing to suggest.";
   }
 
-  return NextResponse.json({
+  return {
     componentId,
     created,
     refreshed,
     skipped,
     openTasks: open.map(mapTask),
     message,
-  });
+  };
+}
+
+/**
+ * GET /api/tasks/suggest?componentId=xxx
+ * GET /api/tasks/suggest?all=1
+ *
+ * Creates an open MaintenanceTask for each schedule that does not already
+ * have one. Idempotent. Also refreshes open-task statuses from due dates.
+ * With all=1, runs for every component that has schedules.
+ */
+export async function GET(req: Request) {
+  const denied = await requireAuth();
+  if (denied) return denied;
+
+  const sp = new URL(req.url).searchParams;
+  const allParam = sp.get("all")?.trim();
+  const all = allParam === "1" || allParam === "true";
+  const componentId = sp.get("componentId")?.trim();
+
+  const db = getDb();
+  const now = new Date();
+
+  if (all) {
+    const components = await db.component.findMany({
+      where: { schedules: { some: {} } },
+      select: { id: true },
+      orderBy: { name: "asc" },
+    });
+
+    const created: TaskJson[] = [];
+    const refreshed: TaskJson[] = [];
+    const skipped: Skipped[] = [];
+    let componentsProcessed = 0;
+
+    for (const { id } of components) {
+      const result = await materializeForComponent(db, id, now);
+      if ("error" in result) continue;
+      componentsProcessed += 1;
+      created.push(...result.created);
+      refreshed.push(...result.refreshed);
+      skipped.push(...result.skipped);
+    }
+
+    let message: string;
+    if (created.length > 0) {
+      message = `Created ${created.length} task${created.length === 1 ? "" : "s"} across ${componentsProcessed} component${componentsProcessed === 1 ? "" : "s"}.`;
+    } else if (componentsProcessed > 0) {
+      message =
+        "No new tasks — open tasks already exist for schedules.";
+    } else {
+      message =
+        "No schedules found. Open a component and add a maintenance schedule first.";
+    }
+
+    return NextResponse.json({
+      all: true,
+      created,
+      refreshed,
+      skipped,
+      componentsProcessed,
+      message,
+    });
+  }
+
+  if (!componentId) {
+    return NextResponse.json(
+      { error: "componentId is required" },
+      { status: 400 },
+    );
+  }
+
+  const result = await materializeForComponent(db, componentId, now);
+  if ("error" in result) {
+    return NextResponse.json(
+      { error: result.error },
+      { status: result.status },
+    );
+  }
+
+  return NextResponse.json(result);
 }

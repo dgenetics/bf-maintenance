@@ -156,9 +156,13 @@ async function driveMaintenanceBuckets(page, out, pin) {
   if (await page.getByLabel("Access PIN").count()) {
     await unlock(page, pin);
   }
-  await page.getByRole("link", { name: "Maintenance" }).click();
+  await page.getByRole("link", { name: "Chores" }).click();
   await page.waitForURL(/\/maintenance/);
-  await page.getByRole("heading", { level: 2, name: "Maintenance", exact: true }).waitFor();
+  await page.getByRole("heading", { level: 2, name: "Chores", exact: true }).waitFor();
+  if (await page.getByRole("button", { name: "Suggest tasks" }).count()) {
+    throw new Error("Suggest tasks button should be removed from Chores");
+  }
+  steps.push("no Suggest tasks button");
   for (const title of ["Overdue", "Due soon", "Upcoming"]) {
     await page.getByText(title, { exact: true }).first().waitFor({
       timeout: 15000,

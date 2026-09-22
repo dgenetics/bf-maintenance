@@ -13,7 +13,7 @@ Maintained verification source for Beausoleil Farm date/schedule maintenance. Re
 ## Driving conventions
 
 - Harness: `node .cursor/skills/verify-bf-maintenance/scripts/drive.mjs --feature <id> --base-url <url>`.
-- Prefer ARIA roles / accessible names (`Access PIN`, `Search systems`, `Unlock`, nav link `Maintenance`). Page titles are PageHeader **h2** — use `getByRole('heading', { level: 2, name: ... })` so Layout chrome h1 `Maintenance` does not collide.
+- Prefer ARIA roles / accessible names (`Access PIN`, `Search systems`, `Unlock`, nav link `Chores`). Page titles are PageHeader **h2** — use `getByRole('heading', { level: 2, name: ... })` so Layout chrome h1 `Maintenance` (app title) does not collide.
 - Start from locked or unlocked state as each recipe’s preconditions state.
 - Mutations on live: avoid creating junk; prefer read-only paths (`pin-gate`, search with disposable query, buckets, archive view, sticky-save geometry).
 - Restore or avoid fixture pollution; never delete `evidence/` in cleanup.
@@ -36,4 +36,4 @@ Each feature file: H1 + one paragraph, then exactly four H2s — `Sub-features`,
 - [Completed archive](./archive.md) — history + filters.
 - [Sticky save](./sticky-save.md) — Save above bottom tab nav.
 - [Schedules](./schedules.md) — per-component maintenance schedules.
-- [Suggest tasks](./suggest-tasks.md) — materialize open tasks from schedules.
+- [Auto-materialize](./auto-materialize.md) — Chores load materializes open tasks from schedules (no Suggest button).
