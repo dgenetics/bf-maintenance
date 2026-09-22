@@ -34,7 +34,7 @@ export interface Asset {
   id: string
   /** System name */
   name: string
-  /** Optional grouping (HVAC, appliance, water, etc.) */
+  /** Optional grouping (HVAC, Culinary, Water, etc.) */
   category: string
   notes: string
   /** Pieces of equipment that make up this system */
@@ -52,14 +52,37 @@ export interface AppData {
 
 export const ASSET_CATEGORIES = [
   'HVAC',
-  'Appliance',
+  'Culinary',
+  'Laundry',
   'Water',
   'Electrical',
   'Plumbing',
-  'Outdoor',
+  'Farm Equipment',
+  'Vehicles',
   'Security',
+  'Structures',
   'Other',
 ] as const
+
+export type AssetCategory = (typeof ASSET_CATEGORIES)[number]
+
+const LEGACY_CATEGORY_MAP: Record<string, AssetCategory> = {
+  Appliance: 'Culinary',
+  Outdoor: 'Farm Equipment',
+}
+
+/** Map legacy / unknown category strings onto the locked set. */
+export function normalizeCategory(s: string): AssetCategory {
+  const trimmed = (s ?? '').trim()
+  if (!trimmed) return 'Other'
+  if ((ASSET_CATEGORIES as readonly string[]).includes(trimmed)) {
+    return trimmed as AssetCategory
+  }
+  if (Object.prototype.hasOwnProperty.call(LEGACY_CATEGORY_MAP, trimmed)) {
+    return LEGACY_CATEGORY_MAP[trimmed]!
+  }
+  return 'Other'
+}
 
 /** Sum of component replacement costs for a system. */
 export function systemReplacementTotal(asset: Asset): number {

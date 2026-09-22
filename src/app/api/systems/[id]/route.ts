@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { mapSystem } from "@/lib/mappers";
+import { normalizeCategory } from "@/types";
 
 export const runtime = "nodejs";
 
@@ -43,7 +44,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
     data: {
       ...(body.name !== undefined ? { name: body.name.trim() } : {}),
       ...(body.category !== undefined
-        ? { category: body.category.trim() || "Other" }
+        ? { category: normalizeCategory(body.category) }
         : {}),
       ...(body.notes !== undefined ? { notes: body.notes } : {}),
     },
