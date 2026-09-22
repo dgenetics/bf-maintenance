@@ -8,6 +8,8 @@
  *   node drive.mjs --feature maintenance-buckets ...
  *   node drive.mjs --feature archive ...
  *   node drive.mjs --feature sticky-save ...
+ *   node drive.mjs --feature schedules ...
+ *   node drive.mjs --feature auto-materialize ...
  *
  * Env: VERIFY_BASE_URL / SMOKE_BASE_URL, BF_ACCESS_PIN, VERIFY_RUN_ID
  * Evidence written under ../evidence/<run-id>/
@@ -216,12 +218,85 @@ async function driveStickySave(page, out, pin) {
   return steps;
 }
 
+async function driveSchedules(page, out, pin) {
+  const steps = [];
+  await page.goto("/", { waitUntil: "networkidle" });
+  if (await page.getByLabel("Access PIN").count()) {
+    await unlock(page, pin);
+  }
+  await page.getByRole("link", { name: "Schedules" }).click();
+  await page.waitForURL(/\/schedules/);
+  await page.getByRole("heading", { level: 2, name: "Schedules", exact: true }).waitFor({
+    timeout: 20000,
+  });
+  steps.push("Schedules h2 visible");
+
+  // List or empty state — no junk creates
+  const empty = page.getByText(/No schedules/i).first();
+  const search = page.getByLabel("Search schedules");
+  const listHint = page.getByText(/of \d+ schedule/i).first();
+  const rendered =
+    (await empty.count()) > 0 ||
+    (await search.count()) > 0 ||
+    (await listHint.count()) > 0;
+  if (!rendered) {
+    throw new Error("Schedules page did not show list chrome or empty state");
+  }
+  if ((await empty.count()) > 0) {
+    steps.push(`empty/list copy: ${(await empty.textContent())?.trim() ?? "No schedules"}`);
+  } else {
+    steps.push("schedules list chrome present (search and/or count)");
+  }
+
+  await screenshot(page, join(out, "schedules.png"));
+  await ariaDump(page, join(out, "schedules.aria.txt"));
+  return steps;
+}
+
+async function driveAutoMaterialize(page, out, pin) {
+  const steps = [];
+  await page.goto("/", { waitUntil: "networkidle" });
+  if (await page.getByLabel("Access PIN").count()) {
+    await unlock(page, pin);
+  }
+  await page.goto("/maintenance", { waitUntil: "networkidle" });
+  await page.getByRole("heading", { level: 2, name: "Chores", exact: true }).waitFor({
+    timeout: 20000,
+  });
+  steps.push("Chores h2 visible");
+
+  if (await page.getByRole("button", { name: "Suggest tasks" }).count()) {
+    throw new Error("Suggest tasks button should be removed (auto-materialize)");
+  }
+  steps.push("no Suggest tasks button");
+
+  for (const title of ["Overdue", "Due soon", "Upcoming"]) {
+    await page.getByText(title, { exact: true }).first().waitFor({
+      timeout: 15000,
+    });
+    steps.push(`bucket visible: ${title}`);
+  }
+
+  const refresh = page.getByRole("button", { name: "Refresh" });
+  if (await refresh.count()) {
+    steps.push("Refresh control present (kept)");
+  } else {
+    steps.push("Refresh control absent (optional)");
+  }
+
+  await screenshot(page, join(out, "auto-materialize.png"));
+  await ariaDump(page, join(out, "auto-materialize.aria.txt"));
+  return steps;
+}
+
 const FEATURES = {
   "pin-gate": drivePinGate,
   "systems-list": driveSystemsList,
   "maintenance-buckets": driveMaintenanceBuckets,
   archive: driveArchive,
   "sticky-save": driveStickySave,
+  schedules: driveSchedules,
+  "auto-materialize": driveAutoMaterialize,
 };
 
 async function main() {

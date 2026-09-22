@@ -66,14 +66,15 @@ jobs:
       - name: Install verify harness (playwright-core)
         run: npm ci --prefix .cursor/skills/verify-bf-maintenance/scripts
 
-      - name: Poteto gate (local launch + doctor + pin-gate)
+      - name: Poteto gate (local launch + doctor + full feature map)
         env:
           # Prefer the Chrome we just installed when PATH differs
           PLAYWRIGHT_CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: |
           export PATH="$(dirname "${PLAYWRIGHT_CHROME_PATH:-/usr/bin/google-chrome}"):$PATH"
           chmod +x .cursor/skills/verify-bf-maintenance/scripts/*.sh
-          ./.cursor/skills/verify-bf-maintenance/scripts/gate.sh --local --feature pin-gate
+          ./.cursor/skills/verify-bf-maintenance/scripts/gate.sh --local \
+            --feature pin-gate,systems-list,maintenance-buckets,archive,sticky-save,schedules,auto-materialize
 
       - name: Upload verify evidence
         if: always()

@@ -1,17 +1,17 @@
 # Sticky save on forms
 
-Long forms keep Cancel/Save in a sticky bar above the fixed bottom tab nav so actions stay reachable while scrolling.
+Long forms keep Cancel/Save reachable while scrolling. **Add system** (`/assets/new`) still uses `StickySaveBar` above the fixed bottom tab nav. **Schedule forms** now use `embedActions` (inline Save/Cancel next to the form) — not the sticky bar — so schedule sticky geometry is out of scope for this driver.
 
 ## Sub-features
 
-- `sticky-add-system` on `/assets/new`.
-- `sticky-schedule` on component schedule create form (`ScheduleForm` + `StickySaveBar`).
-- `sticky-geometry` Save control’s bottom edge stays above the tab `nav`.
+- `sticky-add-system` on `/assets/new` (StickySaveBar).
+- `sticky-geometry` Save control’s bottom edge stays above the tab `nav` on Add system.
+- ~~`sticky-schedule`~~ — schedule create uses inline `embedActions`; do not assert StickySaveBar there.
 
 ## How to get to it (user POV)
 
 - Bottom nav → Add (`/assets/new`).
-- Open a component → Add schedule.
+- (Schedules: Add schedule uses inline Save/Cancel, not sticky.)
 
 ## Driving it with Playwright
 
@@ -27,4 +27,5 @@ Preconditions:
 ## Gotchas
 
 - Bottom nav is `fixed`; main padding and StickySaveBar offset must clear it — regressions show Save under the tab bar.
+- Do not drive schedule-form sticky geometry; those actions are inline via `embedActions`.
 - No meaningful curl equivalent; skip in API-only smoke.
