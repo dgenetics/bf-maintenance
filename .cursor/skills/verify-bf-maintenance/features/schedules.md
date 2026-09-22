@@ -1,15 +1,17 @@
 # Schedules
 
-Schedules attach recurring (or one-shot) maintenance plans to a component: name, frequency, next due date. Creating a schedule can materialize an open task.
+Schedules attach recurring (or one-shot) maintenance plans to a component: name, frequency, next due date. Creating a schedule can materialize an open task. The bottom-nav **Schedules** tab (`/schedules`) lists plans across all systems.
 
 ## Sub-features
 
-- `schedule-list` shows schedules on the component detail page.
-- `schedule-create` Add schedule form with StickySaveBar.
+- `schedule-list-page` bottom tab `/schedules` shows all schedules (or empty).
+- `schedule-list` also shows schedules on the component detail page.
+- `schedule-create` Add schedule form with inline `embedActions` (Save/Cancel).
 - `schedule-delete` removes a schedule after confirm.
 
 ## How to get to it (user POV)
 
+- Bottom nav → Schedules (`/schedules`).
 - Systems → open a system → open a component → Maintenance schedules.
 - Deep link `/assets/:systemId/components/:componentId`.
 
@@ -17,15 +19,16 @@ Schedules attach recurring (or one-shot) maintenance plans to a component: name,
 
 Preconditions:
 
-- Unlocked; know a real `systemId` / `componentId` (from UI or `GET /api/systems`).
-- Prefer local disposable DB for create/delete; on live, stay read-only unless cleaning up.
+- Unlocked.
+- Prefer local disposable DB for create/delete; on live / CI, stay read-only (no junk creates).
 
-- **Open component.** Navigate to a component detail URL. Region `Maintenance schedules` visible.
-- **Read-only proof.** Screenshot list or empty copy `No schedules yet`.
-- **Create (local only).** Click `Add schedule`, fill Schedule name, submit Save; expect success toast/info and a new row. Delete afterward if created for verification.
+- **Open Schedules tab.** Unlock if needed; click nav link `Schedules` (or go to `/schedules`). Wait for h2 `Schedules`.
+- **Read-only proof.** Assert page renders: list chrome (`Search schedules`) and/or empty copy matching `/No schedules/i` (e.g. `No schedules — add one`). Screenshot + aria. Do not create schedules in CI.
+- **Create (local only, optional).** Click `Add schedule`, fill Schedule name, submit Save; expect success and a new row. Delete afterward if created for verification.
 - **API assist.** `GET /api/schedules?componentId=` (as implemented) with session cookie returns JSON for that component.
 
 ## Gotchas
 
 - Live production data is real farm state — do not leave verify-* schedules behind.
 - Auto-materialize on Chores (separate feature) needs at least one schedule to create work.
+- Empty title copy is `No schedules — add one` (not bare `No schedules yet` on the global tab).
