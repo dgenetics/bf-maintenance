@@ -1,0 +1,214 @@
+- alert
+- banner:
+  - paragraph: Beausoleil Farm
+  - heading "Maintenance" [level=1]
+  - text: Systems
+- main:
+  - link "Back to maintenance":
+    - /url: /maintenance
+  - heading "Completed archive" [level=2]
+  - paragraph: 3 of 3 completed tasks
+  - text: System
+  - combobox "Filter by system":
+    - option "All systems" [selected]
+    - option "ALARM"
+    - option "Cabinets"
+    - option "Doors"
+    - option "Electrical"
+    - option "Energy"
+    - option "Farm Animals and Livestock"
+    - option "Farm Equipment and Tools"
+    - option "Fencing Outdoor"
+    - option "Flooring"
+    - option "Furniture"
+    - option "Heating and Cooling"
+    - option "Insulation"
+    - option "Insurance"
+    - option "Internet"
+    - option "Kitchen"
+    - option "Laundry"
+    - option "Lighting"
+    - option "Painting, Sealing and Staining"
+    - option "Plastering"
+    - option "Plumbing"
+    - option "Pond"
+    - option "Property Tax"
+    - option "Regenerative Farm Design"
+    - option "Roof"
+    - option "Septic"
+    - option "Solar Energy System"
+    - option "Sprinkler System"
+    - option "Title and Deed"
+    - option "Trash"
+    - option "Utility"
+    - option "Water Treatment System"
+    - option "Well"
+    - option "Windows"
+  - text: Component
+  - combobox "Filter by component":
+    - option "All components" [selected]
+    - option "Water Treatment System · Sediment / Pre-Filters. Big Blue 30 Micron Prefilter"
+    - option "Water Treatment System · Resin Tank"
+    - option "Water Treatment System · Brine Tank"
+    - option "Water Treatment System · Control Head / Valve"
+    - option "Water Treatment System · Water Heater"
+    - option "Water Treatment System · Ecosoft Water Softener 32,000 gram"
+    - option "Water Treatment System · Post Water Softener Carbon Filter"
+    - option "Cabinets · Laundry Area Cabinets, Office Cabinetry"
+    - option "Cabinets · Kitchen-Refrigerator Wall, Sink base wall and stove island, pantry, Upstairs bath, quiet room, master bedroom closet, office, upstairs bedroom closets"
+    - option "Cabinets · Coat Cubby Cabinet 5' wide x 8' tall x 12' deep"
+    - option "Cabinets · Master Bedroom Closet (now Spa)"
+    - option "Cabinets · Master Bath Linen Closet"
+    - option "Cabinets · TV Room Cabinets"
+    - option "Cabinets · Linen Storage Cabinet"
+    - option "Cabinets · Second Floor Half Bath Sink base Cabinets"
+    - option "Windows · Window Shades, PowerView Hub, PowerView Motorization Remote Control"
+    - option "Windows · Windows"
+    - option "Heating and Cooling · Hydronic Thinwall Multisplit Console for heating and cooling"
+    - option "Heating and Cooling · Hydronic Thinwall Multisplit"
+    - option "Heating and Cooling · Hydronic Thinwall Multisplit"
+    - option "Heating and Cooling · Hydronic High Wall Multisplit"
+    - option "Heating and Cooling · Hydronic High Wall Multisplit"
+    - option "Heating and Cooling · Hydronic High Wall Multisplit"
+    - option "Heating and Cooling · Forced Air Unit"
+    - option "Heating and Cooling · Woodstove, Pedestal Plate Heater, Blower Kit B36"
+    - option "Heating and Cooling · Wood Stove Jotul F 379"
+    - option "Heating and Cooling · Heat Pump Boiler/Chiller"
+    - option "Heating and Cooling · Blower motor"
+    - option "Heating and Cooling · Heating and Air conditioning Heat Pump Multi Zone Outdoor Unit Ductless System"
+    - option "Heating and Cooling · Thermostat"
+    - option "Heating and Cooling · Thermostat"
+    - option "Heating and Cooling · Water Heater- GeoSpring Hybrid Electric Water Heater 601/2HT, 21 3/4 Wide, 22.25 Deep, 50 gallon"
+    - option "Heating and Cooling · Water Pump"
+    - option "Farm Equipment and Tools · ATV"
+    - option "Farm Equipment and Tools · Weed Wacker"
+    - option "Farm Equipment and Tools · Blower Attachment for Weed Wacker"
+    - option "Farm Equipment and Tools · Battery Pack for Weed Wacker"
+    - option "Farm Equipment and Tools · Trailer 1999 Currahee, Class G Weight 3000"
+    - option "Farm Equipment and Tools · Power Saws"
+    - option "Farm Equipment and Tools · Gas Powered Pressure Washer"
+    - option "Farm Equipment and Tools · Plate Compactor"
+    - option "Farm Equipment and Tools · Tractor 4 wheel drive; RCK5422BX mid mount mower; LA 211 Kubota loader; Grass Catcher Boot Kit"
+    - option "Farm Equipment and Tools · Old Trailer Home Made, 3,000 Class G, 1955"
+    - option "Doors · Doors"
+    - option "Doors · Garage Doors and Openers"
+    - option "Doors · Hardware"
+    - option "Doors · Door screening, non pleated screening system"
+    - option "Farm Animals and Livestock · Great Pyrenees - Willow"
+    - 'option "Farm Animals and Livestock · Goats: Scape, Brownie and Canela. Mocha and Cookie. (Born in 2026)"'
+    - option "Farm Animals and Livestock · Goat - Mouse"
+    - option "Well · Well Casing"
+    - option "Well · Well screen"
+    - option "Well · Pump"
+    - option "Well · Wellhead"
+    - option "Well · Pitless Adapter"
+    - option "Well · Distribution Pipe"
+    - option "Well · Pressure Tank"
+    - option "Well · Constant Pressure Valve"
+    - option "Well · Pump Controller"
+    - option "Laundry · Washing Machine and Stand"
+    - option "Laundry · Dryer and Stand"
+    - option "Solar Energy System · Solar Cells Trina Solar TSM 295w"
+    - option "Solar Energy System · Sub Panel 150 Amp"
+    - option "Solar Energy System · Power Optimizer"
+    - option "Solar Energy System · Metering Unit"
+    - option "Solar Energy System · Inverter 1 - Grid Support Interactive Non-isolated Photovoltaic Inverter"
+    - option "Solar Energy System · DC Safety Switch"
+    - option "Solar Energy System · Split Phase Auto Transformer 1"
+    - option "Solar Energy System · Inverter Number 2 - Grid Support Utility Interactive Non Isolated Photovoltaic Inverter"
+    - option "Solar Energy System · Connection Unit. Photovoltaic Rapid Shutdown System"
+    - 'option "Solar Energy System · Load Center #1. ON/OFF"'
+    - option "Solar Energy System · Split Phase Auto Transformer 2"
+    - option "Solar Energy System · Inverter 3 -"
+    - option "Solar Energy System · Connection Unit"
+    - 'option "Solar Energy System · Load Center #2. On/OFF"'
+    - 'option "Solar Energy System · Battery #1"'
+    - 'option "Solar Energy System · Battery #2"'
+    - option "Insurance · Homeowners Insurance"
+    - option "Insurance · General Commercial Liability Insurance"
+    - option "Plastering · Lime plaster exterior of straw bale walls"
+    - option "Plumbing · Delta Shower System, drain ,waste and vent, pex water system, diverter with three controls"
+    - 'option "Plumbing · Laundry room sink, mount kitchen sink, install kitchen sink basket strainer and trap out drain shark bite angle stops, PricePfister Raya # F5297RYB kitchen faucet"'
+    - option "Plumbing · Shower Heads"
+    - option "Plumbing · Pagosa Waterfall Bathroom Faucet"
+    - option "Plumbing · Cayuca Porcelain Pedestal Sink"
+    - option "Plumbing · Shower Door 1-300 Cv Oil Rubber Bronze Shower Door 14' stdb vinyl"
+    - 'option "Plumbing · Toilets: Aquia II dual flush elongated one piece toilet; SoftClose elongated toilet seat;"'
+    - option "Plumbing · Faucets"
+    - 'option "Kitchen · Hood, Zephyr Island, Duct Extension item # ZIC-03ML"'
+    - option "Kitchen · Oven/Stove/Range"
+    - option "Kitchen · Freezer"
+    - option "Kitchen · Refrigerator, Frigidaire Gallery 20.5 cm freezer to refrigerator in stainless steel"
+    - option "Kitchen · Dishwasher"
+    - option "Kitchen · Microwave"
+    - option "Kitchen · Concrete countertops"
+    - option "Kitchen · Concrete countertops"
+    - option "Septic · Norweco Singulair Wastewater Treatment System (BAT as termed by Md Dept of Env) - Singulair Aerator"
+    - option "Septic · Singulair TNT (The Precast Concrete Advanced Treatment Unit)"
+    - option "Septic · Singulair Bio Kinetic Wastewater Treatment Model TNT;"
+    - option "Utility · Electric Grid"
+    - option "Utility · Renewable Energy Credits"
+    - option "Sprinkler System · Sprinklers (fire protection)"
+    - option "Roof · Densdeck 1/4\" installed over existing sheeting on roof"
+    - option "Roof · Metal Roof, Gutters and Downspouts"
+    - option "Roof · BlueGrass Materials Company, LLC, 1700 Patrick Way, Unit B, Bowling Green, Kentucky 42104"
+    - option "Roof · Topsoil Blend"
+    - option "Roof · Green Roof Media"
+    - option "Regenerative Farm Design · Design Proposal from the Reed Center"
+    - option "Property Tax · Frederick County Md Real Estate Tax"
+    - option "Pond · Aquascape Automatic Dosing System"
+    - option "Pond · Acquascape Pro Air 20 Pond Aeration Kit"
+    - option "Lighting · Wall Sconces"
+    - option "Lighting · Wall Sconces and Ceiling Fan"
+    - option "Lighting · Window shading"
+    - option "Lighting · TEC Lighting TEC 700Mokts300Z 300W anbz mn; Tll 700 Mohel2503Z-LED monorail;"
+    - option "Furniture · Queen Size Beds"
+    - option "Furniture · Sofa, power reclining"
+    - option "Furniture · Chair and Ottoman"
+    - option "Furniture · Hammock"
+    - option "Furniture · Bed and Mattress, dark walnut"
+    - option "Furniture · Bed (New TP Contr Luxe Brze 60x80) and Mattress (TP Grey premier base 60x80)"
+    - option "Furniture · Mattress (Bridgewater Firm Matt Queen Prime)"
+    - option "Energy · Solar Panels"
+    - option "Energy · Batteries"
+    - option "Energy · Inverters"
+    - option "Energy · Circuit Panel (Grid)"
+    - option "Energy · Circuit Panel (Solar)"
+    - option "Energy · Circuit Panel (Barn+Shed)"
+    - option "Energy · Generator"
+    - option "Energy · Optimizers QTY 74"
+    - option "Flooring · Garage Floor Coating"
+    - option "Flooring · Terracotta and Limestone Tiles, Sunken Tub floor, Wall tile for shower, Grout, Sealer, Listello on shower walls"
+    - option "ALARM · Honeywell Vista 21iP with IP commmunicator Intrusion Security; Control Panel; 5 smoke detectors; 1 heat detector; 6160 keypad,; IS3035 PIR; WAVE2 Siren; Battery, Jack and Cod"
+    - option "ALARM · 6160 Keypad, 15305 PIR, WAVE 2 Siren, Battery, Jack and Cord"
+    - option "Insulation · Home Insulation"
+    - option "Fencing Outdoor · 13/48/3 Woven Wire with 12' Post Spacing; 2 strands of electric wiring (one on top and one at goat height."
+    - option "Electrical · Electrical Wiring"
+    - option "Trash · Trash pickup"
+    - option "Internet · StarLink"
+  - text: Completed from
+  - textbox "Completed from date"
+  - text: Completed to
+  - textbox "Completed to date"
+  - paragraph: Clean solar panels
+  - paragraph: Energy · Solar Panels
+  - paragraph: Due Jul 12, 2026 · done Jul 15
+  - text: COMPLETED
+  - paragraph: Rinse dust/pollen from panel surface; inspect mounting hardware.
+  - paragraph: Battery health check
+  - paragraph: Energy · Batteries
+  - paragraph: Due Jul 18, 2026 · done Jul 15
+  - text: COMPLETED
+  - paragraph: Check BMS app for cell balance, state of charge, and error codes.
+  - paragraph: Inverter annual inspection
+  - paragraph: Energy · Inverters
+  - paragraph: Due Jul 29, 2026 · done Jul 15
+  - text: COMPLETED
+  - paragraph: Visual inspection, firmware check, and cooling fan clean.
+- navigation:
+  - link "Systems":
+    - /url: /
+  - link "Maintenance":
+    - /url: /maintenance
+  - link "Add":
+    - /url: /assets/new

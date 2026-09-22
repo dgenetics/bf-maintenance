@@ -1,0 +1,7 @@
+- alert
+- paragraph: Beausoleil Farm
+- heading "Maintenance access" [level=1]
+- paragraph: Enter the farm PIN to continue
+- textbox "Access PIN":
+  - /placeholder: PIN
+- button "Unlock" [disabled]

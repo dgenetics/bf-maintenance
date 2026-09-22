@@ -1,0 +1,13 @@
+locator.waitFor: Error: strict mode violation: getByRole('heading', { name: 'Systems' }) resolved to 2 elements:
+    1) <h2 class="text-xl font-semibold tracking-tight text-ink">Systems</h2> aka getByRole('heading', { name: 'Systems', exact: true })
+    2) <h3 class="text-base font-semibold text-ink">No systems yet</h3> aka getByRole('heading', { name: 'No systems yet' })
+
+Call log:
+  - waiting for getByRole('heading', { name: 'Systems' }) to be visible
+
+    at Object.drivePinGate (/workspace/repos/bf-maintenance/.cursor/skills/verify-bf-maintenance/scripts/drive.mjs:108:56)
+    at async main (/workspace/repos/bf-maintenance/.cursor/skills/verify-bf-maintenance/scripts/drive.mjs:259:13) {
+  log: [
+    "  - waiting for getByRole('heading', { name: 'Systems' }) to be visible"
+  ]
+}

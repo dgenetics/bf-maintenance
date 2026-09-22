@@ -1,0 +1,35 @@
+- alert
+- banner:
+  - paragraph: Beausoleil Farm
+  - heading "Maintenance" [level=1]
+  - text: Systems
+- main:
+  - heading "Systems" [level=2]
+  - paragraph: 0 systems
+  - link "Add":
+    - /url: /assets/new
+    - button "Add"
+  - textbox "Search systems":
+    - /placeholder: Search name, model, serial, vendor…
+  - combobox "Filter by category":
+    - option "All categories" [selected]
+    - option "HVAC"
+    - option "Appliance"
+    - option "Water"
+    - option "Electrical"
+    - option "Plumbing"
+    - option "Outdoor"
+    - option "Security"
+    - option "Other"
+  - heading "No systems yet" [level=3]
+  - paragraph: Add the first system for the house or property.
+  - link "Add system":
+    - /url: /assets/new
+    - button "Add system"
+- navigation:
+  - link "Systems":
+    - /url: /
+  - link "Maintenance":
+    - /url: /maintenance
+  - link "Schedules":
+    - /url: /schedules

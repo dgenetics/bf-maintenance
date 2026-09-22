@@ -1,0 +1,14 @@
+{
+  "feature": "pin-gate",
+  "base": "http://127.0.0.1:3101",
+  "runId": "20260922T001405Z-c4b2b45",
+  "steps": [
+    "locked: heading Maintenance access visible",
+    "wrong pin: Incorrect PIN shown",
+    "right pin: Systems heading + Beausoleil Farm chrome"
+  ],
+  "pinSource": "BF_ACCESS_PIN",
+  "sha": "c4b2b45",
+  "finished": "2026-09-22T00:14:10.447Z"
+}
+evidence: /workspace/repos/bf-maintenance/.cursor/skills/verify-bf-maintenance/evidence/20260922T001405Z-c4b2b45
