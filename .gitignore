@@ -33,3 +33,6 @@ src/generated
 .vercel
 .env.bf*
 tsconfig.tsbuildinfo
+
+# verify skill evidence (local/CI artifacts)
+.cursor/skills/verify-bf-maintenance/evidence/
