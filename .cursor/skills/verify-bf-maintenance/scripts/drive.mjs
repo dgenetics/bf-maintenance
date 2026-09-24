@@ -125,9 +125,9 @@ async function driveSystemsList(page, out, pin) {
     await unlock(page, pin);
   }
   await page.getByRole("heading", { level: 2, name: "Systems", exact: true }).waitFor();
-  const headerAdd = page.getByRole("banner").getByRole("link", { name: "Add system" });
+  const headerAdd = page.getByRole("banner").getByRole("button", { name: "Add system" });
   await headerAdd.waitFor({ timeout: 10000 });
-  steps.push("header Add system pill visible");
+  steps.push("header Add system CTA visible");
   const search = page.getByLabel("Search systems");
   await search.fill("xyzzy-no-match-verify");
   await page.waitForTimeout(300);
@@ -202,10 +202,13 @@ async function driveStickySave(page, out, pin) {
   if (await page.getByLabel("Access PIN").count()) {
     await unlock(page, pin);
   }
-  await page.goto("/assets/new", { waitUntil: "networkidle" });
-  await page.getByRole("heading", { level: 2, name: "Add system", exact: true }).waitFor();
-  const save = page.getByRole("button", { name: "Save" });
+  await page.getByRole("banner").getByRole("button", { name: "Add system" }).click();
+  const dialog = page.getByRole("dialog", { name: "Add system" });
+  await dialog.waitFor({ timeout: 10000 });
+  await dialog.getByRole("heading", { level: 2, name: "Add system", exact: true }).waitFor();
+  const save = dialog.getByRole("button", { name: "Save" });
   await save.waitFor();
+  await dialog.getByRole("button", { name: "Cancel" }).waitFor();
   const box = await save.boundingBox();
   const nav = page.locator("nav").last();
   const navBox = await nav.boundingBox();
@@ -217,7 +220,7 @@ async function driveStickySave(page, out, pin) {
   }
   await screenshot(page, join(out, "sticky-save.png"));
   steps.push(
-    `Save above tab nav (save.bottom=${Math.round(box.y + box.height)} nav.top=${Math.round(navBox.y)})`,
+    `Add system modal Save above tab nav (save.bottom=${Math.round(box.y + box.height)} nav.top=${Math.round(navBox.y)})`,
   );
   return steps;
 }
@@ -237,7 +240,7 @@ async function driveSchedules(page, out, pin) {
 
   const headerAdd = page.getByRole("banner").getByRole("button", { name: "Add schedule" });
   await headerAdd.waitFor({ timeout: 10000 });
-  steps.push("header Add schedule pill visible");
+  steps.push("header Add schedule CTA visible");
   if ((await page.getByLabel("Filter by component").count()) > 0) {
     throw new Error("Component filter should be removed from Schedules");
   }

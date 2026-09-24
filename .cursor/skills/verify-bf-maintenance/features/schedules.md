@@ -24,7 +24,7 @@ Preconditions:
 
 - **Open Schedules tab.** Unlock if needed; click nav link `Schedules` (or go to `/schedules`). Wait for h2 `Schedules`.
 - **Read-only proof.** Assert page renders: list chrome (`Search schedules`) and/or empty copy matching `/No schedules/i` (e.g. `No schedules — add one`). Screenshot + aria. Do not create schedules in CI.
-- **Create (local only, optional).** Click header pill `Add schedule`, fill Schedule name, submit Save; expect success and a new row. Delete afterward if created for verification.
+- **Create (local only, optional).** Click header CTA `Add schedule`, fill Schedule name, submit Save; expect success and a new row. Delete afterward if created for verification.
 - **API assist.** `GET /api/schedules?componentId=` (as implemented) with session cookie returns JSON for that component.
 
 ## Gotchas
@@ -33,7 +33,6 @@ Preconditions:
 - Auto-materialize on Chores (separate feature) needs at least one schedule to create work.
 - Empty title copy is `No schedules — add one` (not bare `No schedules yet` on the global tab).
 
-- Header pill on `/schedules` is **+ Add schedule** (not a page-name badge). PageHeader no longer has a body Add; empty-state Add may still appear when the list is empty.
+- Header CTA on `/schedules` is **+ Add schedule** (not a page-name badge). PageHeader no longer has a body Add; empty-state Add may still appear when the list is empty.
 - List filters are **System** + search only — Component and Urgency filter controls (and `?component=` / `?urgency=`) were removed. Urgency chips on rows remain.
-- Header Add sets `?add=1` briefly; the page opens the Add schedule sheet and clears the param.
-
+- Header Add sets `?add=1` briefly; the page opens a vertically centered Add schedule modal and clears the param.

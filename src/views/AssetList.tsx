@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, Wrench } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import {
@@ -8,15 +8,24 @@ import {
   systemReplacementTotal,
   type Asset,
   type AssetCategory,
+  type AssetInput,
 } from '../types'
-import { formatMoney } from '../lib/utils'
+import { emptyAssetInput, formatMoney } from '../lib/utils'
 import { EmptyState } from '../components/EmptyState'
+import { Modal } from '../components/Modal'
+import { AssetFormFields } from '../components/AssetFormFields'
 import { Button, Card, Input, PageHeader } from '../components/ui'
 
 export function AssetList() {
-  const { assets } = useData()
+  const { assets, addAsset } = useData()
+  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const query = params.get('q') ?? ''
+  const addRequested = params.get('add') === '1'
+
+  const [addOpen, setAddOpen] = useState(false)
+  const [value, setValue] = useState<AssetInput>(() => emptyAssetInput())
+  const [saving, setSaving] = useState(false)
 
   function setQuery(next: string) {
     const trimmed = next
@@ -26,6 +35,46 @@ export function AssetList() {
       params.delete('q')
     }
     setParams(params, { replace: true })
+  }
+
+  function openAdd() {
+    setValue(emptyAssetInput())
+    setAddOpen(true)
+  }
+
+  function closeAdd() {
+    setAddOpen(false)
+    setValue(emptyAssetInput())
+  }
+
+  useEffect(() => {
+    if (!addRequested) return
+    setValue(emptyAssetInput())
+    setAddOpen(true)
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('add')
+        return next
+      },
+      { replace: true },
+    )
+  }, [addRequested, setParams])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!value.name.trim() || saving) return
+    setSaving(true)
+    try {
+      const asset = await addAsset({
+        ...value,
+        name: value.name.trim(),
+      })
+      closeAdd()
+      navigate(`/assets/${asset.id}`, { replace: true })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const filtered = useMemo(() => {
@@ -107,9 +156,9 @@ export function AssetList() {
           }
           action={
             assets.length === 0 ? (
-              <Link to="/assets/new">
-                <Button size="sm">Add system</Button>
-              </Link>
+              <Button size="sm" onClick={openAdd}>
+                Add system
+              </Button>
             ) : undefined
           }
         />
@@ -150,6 +199,34 @@ export function AssetList() {
             </section>
           ))}
         </div>
+      )}
+
+      {addOpen && (
+        <Modal
+          title="Add system"
+          onClose={closeAdd}
+          footer={
+            <>
+              <Button type="button" variant="secondary" onClick={closeAdd}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="asset-new-form"
+                disabled={!value.name.trim() || saving}
+              >
+                Save
+              </Button>
+            </>
+          }
+        >
+          <form id="asset-new-form" onSubmit={handleSubmit} className="space-y-4">
+            <AssetFormFields
+              value={value}
+              onChange={(patch) => setValue((prev) => ({ ...prev, ...patch }))}
+            />
+          </form>
+        </Modal>
       )}
     </div>
   )

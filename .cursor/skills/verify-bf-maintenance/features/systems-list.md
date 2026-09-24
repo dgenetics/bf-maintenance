@@ -32,6 +32,6 @@ Preconditions:
 - `GET /api/systems` still returns the full list; filtering is UI-only.
 - Category filter UI was removed; only `?q=` drives list filtering. All non-empty category sections always show.
 
-- Header pill on Systems home (`/`) is **+ Add system** (links to `/assets/new`). PageHeader no longer has a body Add; empty-state Add remains when there are zero systems.
-- Other routes under Layout (asset detail, Add system form, Chores) still show the page-name pill, not Add.
-
+- Header CTA on Systems home (`/`) is **+ Add system** (button; opens a centered Add system modal via brief `?add=1`). PageHeader has no body Add; empty-state Add remains when there are zero systems.
+- Other routes under Layout (asset detail, Chores) still show the page-name badge, not Add.
+- Deep link `/assets/new` redirects to `/?add=1` (same modal).

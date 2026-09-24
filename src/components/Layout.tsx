@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
 import { CalendarClock, CalendarRange, Plus, Wrench } from 'lucide-react'
 import { cn } from '../lib/utils'
 
@@ -8,34 +8,32 @@ const nav = [
   { to: '/schedules', label: 'Schedules', icon: CalendarRange, end: false },
 ]
 
-const pillClass =
-  'inline-flex items-center gap-1 rounded-full bg-forest-800 px-3 py-1 text-xs font-medium text-cream-50 transition hover:bg-forest-700'
+const addCtaClass =
+  'inline-flex items-center gap-1.5 rounded-xl bg-cream-100 px-4 py-2.5 text-sm font-semibold text-forest-900 shadow-sm transition hover:bg-cream-50 active:scale-[0.98]'
 
 function HeaderPill() {
   const { pathname } = useLocation()
   const [params, setParams] = useSearchParams()
 
+  function openAdd() {
+    const next = new URLSearchParams(params)
+    next.set('add', '1')
+    setParams(next, { replace: true })
+  }
+
   if (pathname === '/' || pathname === '') {
     return (
-      <Link to="/assets/new" className={pillClass}>
-        <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
+      <button type="button" className={addCtaClass} onClick={openAdd}>
+        <Plus className="h-4 w-4" strokeWidth={2.25} />
         Add system
-      </Link>
+      </button>
     )
   }
 
   if (pathname.startsWith('/schedules')) {
     return (
-      <button
-        type="button"
-        className={pillClass}
-        onClick={() => {
-          const next = new URLSearchParams(params)
-          next.set('add', '1')
-          setParams(next, { replace: true })
-        }}
-      >
-        <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
+      <button type="button" className={addCtaClass} onClick={openAdd}>
+        <Plus className="h-4 w-4" strokeWidth={2.25} />
         Add schedule
       </button>
     )

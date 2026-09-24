@@ -7,7 +7,6 @@ import { Layout } from "./components/Layout";
 import { PinGate } from "./components/PinGate";
 import { cleanupLegacyClient } from "./lib/cleanup-legacy";
 import { AssetList } from "./views/AssetList";
-import { AssetNew } from "./views/AssetNew";
 import { AssetDetail } from "./views/AssetDetail";
 import { ComponentDetail } from "./views/ComponentDetail";
 import { Maintenance } from "./views/Maintenance";
@@ -59,7 +58,7 @@ function LoadingShell() {
         <Route path="maintenance/archive" element={<MaintenanceArchive />} />
         <Route path="schedules" element={<Schedules />} />
         <Route path="assets" element={<Navigate to="/" replace />} />
-        <Route path="assets/new" element={<AssetNew />} />
+        <Route path="assets/new" element={<Navigate to="/?add=1" replace />} />
         <Route
           path="assets/:systemId/components/:componentId"
           element={<ComponentDetail />}
