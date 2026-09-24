@@ -1,6 +1,6 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
-import { CalendarClock, CalendarRange, LogOut, Plus, Wrench } from 'lucide-react'
+import { CalendarClock, CalendarRange, LogOut, MoreHorizontal, Plus, Wrench } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 const nav = [
@@ -53,6 +53,56 @@ function HeaderPill() {
   )
 }
 
+function HeaderOverflowMenu({ onSignOut }: { onSignOut: () => void }) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDoc = (e: MouseEvent) => {
+      if (!menuRef.current) return
+      if (!menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [menuOpen])
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        type="button"
+        className="rounded-lg p-1.5 text-cream-300 transition hover:bg-forest-800 hover:text-cream-50"
+        aria-label="More"
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+        title="More"
+        onClick={() => setMenuOpen((v) => !v)}
+      >
+        <MoreHorizontal className="h-5 w-5" strokeWidth={1.75} />
+      </button>
+      {menuOpen && (
+        <div
+          role="menu"
+          className="absolute right-0 z-30 mt-1 w-44 overflow-hidden rounded-xl border border-cream-200 bg-white py-1 shadow-lg"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-muted hover:bg-cream-100 hover:text-ink"
+            onClick={() => {
+              setMenuOpen(false)
+              onSignOut()
+            }}
+          >
+            <LogOut className="h-3.5 w-3.5" strokeWidth={2} />
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function Layout({ onSignedOut }: { onSignedOut: () => void }) {
   const { pathname } = useLocation()
   const mainRef = useRef<HTMLElement>(null)
@@ -94,16 +144,8 @@ export function Layout({ onSignedOut }: { onSignedOut: () => void }) {
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => void signOut()}
-              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-cream-300 transition hover:bg-forest-800 hover:text-cream-50"
-              aria-label="Sign out"
-            >
-              <LogOut className="h-3.5 w-3.5" strokeWidth={2} />
-              Sign out
-            </button>
             <HeaderPill />
+            <HeaderOverflowMenu onSignOut={() => void signOut()} />
           </div>
         </div>
       </header>
