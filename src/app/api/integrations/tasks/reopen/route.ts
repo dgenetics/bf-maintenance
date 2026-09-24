@@ -1,22 +1,22 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { requireIntegrationAuth } from "@/lib/integration-auth";
-import { completeMaintenanceTask } from "@/lib/complete-task";
-import { notifyAieaComplete } from "@/lib/aiea-client";
+import { reopenMaintenanceTask } from "@/lib/reopen-task";
 
 export const runtime = "nodejs";
 
 /**
- * POST /api/integrations/tasks/complete
- * Service auth only. Body: { taskId: string, completedNotes?: string }
+ * POST /api/integrations/tasks/reopen
+ * Service auth only. Body: { taskId: string }
  *
- * Used by AiEA when a user completes an imported farm maintenance task.
+ * Used by AiEA when a user reopens a linked imported farm maintenance task.
+ * Does not rewind schedule (v1). Does not notify AiEA (caller is AiEA).
  */
 export async function POST(req: Request) {
   const denied = requireIntegrationAuth(req);
   if (denied) return denied;
 
-  let body: { taskId?: string; completedNotes?: string | null };
+  let body: { taskId?: string };
   try {
     body = await req.json();
   } catch {
@@ -29,18 +29,9 @@ export async function POST(req: Request) {
   }
 
   const db = getDb();
-  const result = await completeMaintenanceTask(
-    db,
-    taskId,
-    body.completedNotes,
-  );
+  const result = await reopenMaintenanceTask(db, taskId);
   if (!result) {
     return NextResponse.json({ error: "Task not found" }, { status: 404 });
-  }
-
-  // Best-effort AiEA sync (idempotent on AiEA if already DONE from AiEA→BF).
-  if (!result.alreadyComplete) {
-    await notifyAieaComplete(taskId);
   }
 
   return NextResponse.json({
