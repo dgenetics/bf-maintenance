@@ -132,9 +132,10 @@ export function ScheduleForm({
           placeholder="Optional details"
         />
       </Field>
-      <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
+      <div className="grid min-w-0 grid-cols-2 gap-2 [&>*]:min-w-0">
         <Field label="Frequency">
           <Select
+            className="h-11"
             value={frequency}
             onChange={(e) => setFrequency(e.target.value)}
           >
@@ -148,6 +149,7 @@ export function ScheduleForm({
         <Field label="Next due">
           <Input
             type="date"
+            className="h-11 max-w-full box-border"
             value={nextDueDate}
             onChange={(e) => setNextDueDate(e.target.value)}
           />

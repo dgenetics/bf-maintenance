@@ -45,3 +45,15 @@ body {
 .safe-pb {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
+
+/* date-input-mobile-clamp */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="month"],
+input[type="week"] {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
