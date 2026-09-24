@@ -72,7 +72,7 @@ node .cursor/skills/verify-bf-maintenance/scripts/drive.mjs \
 
 Features: `pin-gate` | `systems-list` | `maintenance-buckets` | `archive` | `sticky-save` | `schedules` | `auto-materialize` | `move-component`.
 
-Stable handles: `getByLabel('Access PIN')`, `getByRole('button', { name: 'Unlock' })`, `getByLabel('Search systems')`, nav link `Chores`, page headings via `getByRole('heading', { level: 2, name: ... })` for `Systems` / `Chores` / `Completed archive` / `Add system` (Layout chrome is a separate h1 `Maintenance` — never use bare `heading` name `Maintenance` for the page title).
+Stable handles: `getByLabel('Access PIN')`, `getByRole('button', { name: 'Unlock' })`, `getByLabel('Search systems')`, nav link `Chores`, page headings via `getByRole('heading', { level: 2, name: ... })` for `Systems` / `Chores` / `Completed archive` / `Add system` (Layout chrome is a separate h1 `Maintenance` — never use bare `heading` name `Maintenance` for the page title). On Systems home / Schedules, the header pill is `Add system` / `Add schedule` (not a page-name badge).
 
 Recipes live in `features/`. Prefer those over inventing selectors.
 

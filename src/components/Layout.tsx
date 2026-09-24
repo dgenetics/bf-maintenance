@@ -1,5 +1,5 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { CalendarClock, CalendarRange, Wrench } from 'lucide-react'
+import { Link, NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
+import { CalendarClock, CalendarRange, Plus, Wrench } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 const nav = [
@@ -8,16 +8,48 @@ const nav = [
   { to: '/schedules', label: 'Schedules', icon: CalendarRange, end: false },
 ]
 
-function headerBadge(pathname: string): string {
-  if (pathname.startsWith('/schedules')) return 'Schedules'
-  if (pathname.startsWith('/maintenance')) return 'Chores'
-  return 'Systems'
+const pillClass =
+  'inline-flex items-center gap-1 rounded-full bg-forest-800 px-3 py-1 text-xs font-medium text-cream-50 transition hover:bg-forest-700'
+
+function HeaderPill() {
+  const { pathname } = useLocation()
+  const [params, setParams] = useSearchParams()
+
+  if (pathname === '/' || pathname === '') {
+    return (
+      <Link to="/assets/new" className={pillClass}>
+        <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
+        Add system
+      </Link>
+    )
+  }
+
+  if (pathname.startsWith('/schedules')) {
+    return (
+      <button
+        type="button"
+        className={pillClass}
+        onClick={() => {
+          const next = new URLSearchParams(params)
+          next.set('add', '1')
+          setParams(next, { replace: true })
+        }}
+      >
+        <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
+        Add schedule
+      </button>
+    )
+  }
+
+  const label = pathname.startsWith('/maintenance') ? 'Chores' : 'Systems'
+  return (
+    <div className="rounded-full bg-forest-800 px-3 py-1 text-xs text-cream-200">
+      {label}
+    </div>
+  )
 }
 
 export function Layout() {
-  const { pathname } = useLocation()
-  const badge = headerBadge(pathname)
-
   return (
     <div className="mx-auto flex min-h-dvh max-w-3xl flex-col bg-cream-50 shadow-sm sm:border-x sm:border-cream-200">
       <header className="sticky top-0 z-20 border-b border-cream-200 bg-forest-900 text-cream-50">
@@ -30,9 +62,7 @@ export function Layout() {
               Maintenance
             </h1>
           </div>
-          <div className="rounded-full bg-forest-800 px-3 py-1 text-xs text-cream-200">
-            {badge}
-          </div>
+          <HeaderPill />
         </div>
       </header>
 

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Plus, Search, Wrench } from 'lucide-react'
+import { Search, Wrench } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import {
   ASSET_CATEGORIES,
@@ -81,14 +81,6 @@ export function AssetList() {
       <PageHeader
         title="Systems"
         subtitle={subtitle}
-        action={
-          <Link to="/assets/new">
-            <Button size="sm">
-              <Plus className="h-4 w-4" />
-              Add
-            </Button>
-          </Link>
-        }
       />
 
       <div className="mb-4">
