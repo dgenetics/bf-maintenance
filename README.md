@@ -42,10 +42,11 @@ Provisioned via Vercel Marketplace as **`bf-maintenance-db`** (project-linked). 
 |-----|---------|
 | `TURSO_DATABASE_URL` | libSQL URL (from Marketplace resource) |
 | `TURSO_AUTH_TOKEN` | DB token (from Marketplace resource) |
-| `BF_ACCESS_PIN` | App unlock PIN |
-| `BF_SESSION_SECRET` | Session HMAC secret |
+| `BF_SESSION_SECRET` | Session HMAC secret (required) |
+| `AIEA_TURSO_DATABASE_URL` / `AIEA_TURSO_AUTH_TOKEN` | AiEA identity DB (same User table as AiEA) |
+| `AIEA_DATABASE_URL` | Local/file identity DB (verify or shared AiEA sqlite) |
 
-Do **not** reuse AiEA’s `TURSO_*` values.
+BF app data stays on BF’s own Turso (`TURSO_*`). Account login reads AiEA’s User rows via `AIEA_*` — do **not** point BF `TURSO_*` at AiEA.
 
 ```bash
 vercel env pull .env.vercel --environment=production --yes
@@ -87,9 +88,9 @@ Once enabled, PRs and pushes to `main` run:
 
 1. `npm ci` + `npm run typecheck` + `npm run build`
 2. Local Next server via the verify skill `gate.sh --local`
-3. Instance **doctor** + Playwright **pin-gate** drive
+3. Instance **doctor** + Playwright **account-login** drive
 
-**Required secret:** `BF_ACCESS_PIN` (Settings → Secrets and variables → Actions) — same unlock PIN as production/local. Without it the verify job fails fast with a clear error.
+**Optional secrets:** `BF_AUTH_EMAIL` / `BF_AUTH_PASSWORD` / `BF_SESSION_SECRET` — local `--local` gate seeds a disposable AiEA-shaped identity DB with defaults when unset.
 
 Evidence lands in the workflow artifact `verify-evidence-<run_id>`.
 

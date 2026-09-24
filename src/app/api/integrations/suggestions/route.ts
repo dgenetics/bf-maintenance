@@ -36,7 +36,7 @@ export type BfSuggestion = {
 /**
  * GET /api/integrations/suggestions
  *
- * Service auth only (not PIN cookie). Materializes open tasks from schedules
+ * Service auth only (not user session cookie). Materializes open tasks from schedules
  * for all components, then returns an AiEA-friendly suggestion list.
  */
 export async function GET(req: Request) {

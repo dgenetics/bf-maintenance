@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { isAuthenticated } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  const ok = await isAuthenticated();
-  if (!ok) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
-  return NextResponse.json({ authenticated: true });
+  return NextResponse.json({ authenticated: true, user });
 }

@@ -1,72 +1,94 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import type { IdentityUser } from "@/lib/aiea-identity";
 
 export const SESSION_COOKIE = "bf_session";
-const MAX_AGE_SEC = 60 * 60 * 24 * 30; // 30 days
+// Persistent until explicit Sign out — no idle timeout.
+const SESSION_DAYS = 365;
+const MAX_AGE_SEC = 60 * 60 * 24 * SESSION_DAYS;
+const SESSION_VERSION = "v2";
 
-function getPin(): string {
-  const pin = process.env.BF_ACCESS_PIN?.trim();
-  if (!pin) {
-    throw new Error("BF_ACCESS_PIN is not configured");
-  }
-  return pin;
-}
+export type SessionUser = IdentityUser;
 
 function sessionSecret(): string {
-  return (
-    process.env.BF_SESSION_SECRET?.trim() ||
-    process.env.BF_ACCESS_PIN?.trim() ||
-    "dev-only-secret"
-  );
+  const secret = process.env.BF_SESSION_SECRET?.trim();
+  if (!secret) {
+    throw new Error("BF_SESSION_SECRET is not configured");
+  }
+  return secret;
 }
 
-/** Opaque session token derived from PIN + secret (not reversible to PIN). */
-export function expectedSessionToken(): string {
-  return createHmac("sha256", sessionSecret())
-    .update(`bf-maintenance:v1:${getPin()}`)
-    .digest("hex");
+function sign(body: string): string {
+  return createHmac("sha256", sessionSecret()).update(body).digest("base64url");
 }
 
-export function pinsMatch(provided: string, expected: string): boolean {
-  const a = Buffer.from(provided.normalize("NFKC"));
-  const b = Buffer.from(expected.normalize("NFKC"));
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+function encodeSession(user: SessionUser, expMs: number): string {
+  const body = Buffer.from(
+    JSON.stringify({
+      v: SESSION_VERSION,
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      exp: expMs,
+    }),
+  ).toString("base64url");
+  return `${body}.${sign(body)}`;
 }
 
-export function tokensMatch(provided: string, expected: string): boolean {
+function decodeSession(token: string): SessionUser | null {
+  const dot = token.lastIndexOf(".");
+  if (dot <= 0) return null;
+  const body = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+  const expected = sign(body);
   try {
-    const a = Buffer.from(provided);
+    const a = Buffer.from(sig);
     const b = Buffer.from(expected);
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
+    if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
   } catch {
-    return false;
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(
+      Buffer.from(body, "base64url").toString("utf8"),
+    ) as {
+      v?: string;
+      id?: string;
+      email?: string;
+      name?: string;
+      exp?: number;
+    };
+    if (payload.v !== SESSION_VERSION) return null;
+    if (!payload.id || !payload.email || !payload.name || !payload.exp) {
+      return null;
+    }
+    if (payload.exp < Date.now()) return null;
+    return { id: payload.id, email: payload.email, name: payload.name };
+  } catch {
+    return null;
   }
 }
 
-export function verifyPin(pin: string): boolean {
+export async function getSessionUser(): Promise<SessionUser | null> {
   try {
-    return pinsMatch(pin.trim(), getPin());
+    const jar = await cookies();
+    const token = jar.get(SESSION_COOKIE)?.value;
+    if (!token) return null;
+    return decodeSession(token);
   } catch {
-    return false;
+    return null;
   }
 }
 
 export async function isAuthenticated(): Promise<boolean> {
-  try {
-    const jar = await cookies();
-    const token = jar.get(SESSION_COOKIE)?.value;
-    if (!token) return false;
-    return tokensMatch(token, expectedSessionToken());
-  } catch {
-    return false;
-  }
+  return (await getSessionUser()) !== null;
 }
 
-export function setSessionCookie(res: NextResponse): void {
-  res.cookies.set(SESSION_COOKIE, expectedSessionToken(), {
+export function setSessionCookie(res: NextResponse, user: SessionUser): void {
+  const expMs = Date.now() + MAX_AGE_SEC * 1000;
+  res.cookies.set(SESSION_COOKIE, encodeSession(user, expMs), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

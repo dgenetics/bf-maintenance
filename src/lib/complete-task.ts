@@ -18,7 +18,7 @@ export type CompleteTaskResult = {
 
 /**
  * Mark a maintenance task complete and advance a recurring schedule.
- * Shared by PIN-auth UI routes and AiEA integration routes.
+ * Shared by session-auth UI routes and AiEA integration routes.
  */
 export async function completeMaintenanceTask(
   db: PrismaClient,

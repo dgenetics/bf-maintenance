@@ -22,7 +22,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!res.ok) {
     if (res.status === 401 && typeof window !== "undefined") {
       window.location.assign("/");
-      throw new Error("Session expired — enter PIN again");
+      throw new Error("Session expired — sign in again");
     }
     let message = res.statusText;
     try {

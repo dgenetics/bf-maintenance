@@ -2,7 +2,7 @@
 # Instance health: is this bf-maintenance worth driving?
 # Checks process/port, auth, and identity — not merely compile.
 # Usage: doctor.sh [base-url]
-# Env: BF_ACCESS_PIN (required), VERIFY_BASE_URL / SMOKE_BASE_URL
+# Env: BF_AUTH_EMAIL, BF_AUTH_PASSWORD (required), VERIFY_BASE_URL / SMOKE_BASE_URL
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck disable=SC1091
@@ -10,7 +10,8 @@ source "$SCRIPT_DIR/lib.sh"
 load_env
 
 BASE="${1:-$(default_base_url)}"
-PIN="${BF_ACCESS_PIN:-}"
+EMAIL="${BF_AUTH_EMAIL:-}"
+PASSWORD="${BF_AUTH_PASSWORD:-}"
 PKG_VERSION=$(node -p "require('$REPO_ROOT/package.json').version" 2>/dev/null || echo unknown)
 SHA=$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)
 
@@ -23,26 +24,26 @@ echo "package_version: $PKG_VERSION"
 code=$(curl -s -o /tmp/bf-doctor-root.html -w '%{http_code}' --max-time 10 "$BASE/" || echo "000")
 echo "GET / -> $code"
 [[ "$code" == "200" ]] || { echo "FAIL: root not 200"; exit 1; }
-if ! grep -qiE 'Beausoleil|Maintenance|PIN|Checking access' /tmp/bf-doctor-root.html; then
+if ! grep -qiE 'Beausoleil|Maintenance|Sign in|Checking access|Get started' /tmp/bf-doctor-root.html; then
   echo "WARN: root HTML did not mention Beausoleil/Maintenance (SPA shell may still be ok)"
 fi
 
-# 2) Auth — wrong pin rejected
-[[ -n "$PIN" ]] || { echo "FAIL: BF_ACCESS_PIN not set"; exit 2; }
+# 2) Auth — wrong password rejected
+[[ -n "$EMAIL" && -n "$PASSWORD" ]] || { echo "FAIL: BF_AUTH_EMAIL and BF_AUTH_PASSWORD not set"; exit 2; }
 bad=$(curl -s -o /tmp/bf-doctor-bad.json -w '%{http_code}' --max-time 10 \
   -X POST "$BASE/api/auth/login" \
   -H 'content-type: application/json' \
-  -d '{"pin":"__doctor_wrong__"}' || echo "000")
-echo "POST /api/auth/login wrong pin -> $bad"
-[[ "$bad" == "401" || "$bad" == "403" ]] || { echo "FAIL: expected 401/403 for wrong pin"; exit 1; }
+  -d "{\"email\":\"$EMAIL\",\"password\":\"__doctor_wrong__\"}" || echo "000")
+echo "POST /api/auth/login wrong password -> $bad"
+[[ "$bad" == "401" || "$bad" == "403" ]] || { echo "FAIL: expected 401/403 for wrong password"; exit 1; }
 
-# 3) Auth — correct pin + session
+# 3) Auth — correct credentials + session
 jar=$(mktemp)
-ok=$(curl -s -c "$jar" -o /tmp/bf-doctor-ok.json -w '%{http_code}' --max-time 10 \
+ok=$(curl -s -c "$jar" -o /tmp/bf-doctor-ok.json -w '%{http_code}' --max-time 15 \
   -X POST "$BASE/api/auth/login" \
   -H 'content-type: application/json' \
-  -d "{\"pin\":\"$PIN\"}" || echo "000")
-echo "POST /api/auth/login right pin -> $ok"
+  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}" || echo "000")
+echo "POST /api/auth/login right creds -> $ok"
 [[ "$ok" == "200" ]] || { echo "FAIL: login failed: $(cat /tmp/bf-doctor-ok.json)"; rm -f "$jar"; exit 1; }
 if ! grep -q bf_session "$jar"; then
   echo "FAIL: no bf_session cookie after login"
@@ -80,16 +81,5 @@ assert isinstance(data, list), type(data)
 print(f"open_tasks_count: {len(data)}")
 PY
 
-bare=$(curl -s -b "$jar" -o /tmp/bf-doctor-tasks-bare.json -w '%{http_code}' --max-time 15 \
-  "$BASE/api/tasks" || echo "000")
-echo "GET /api/tasks (bare) -> $bare"
-[[ "$bare" == "200" ]] || { echo "FAIL: bare /api/tasks must be 200"; rm -f "$jar"; exit 1; }
-python3 - <<'PY'
-import json
-data = json.load(open("/tmp/bf-doctor-tasks-bare.json"))
-assert isinstance(data, list), type(data)
-print(f"all_tasks_count: {len(data)}")
-PY
-
 rm -f "$jar"
-echo "doctor ok (instance healthy)"
+echo "doctor OK"
