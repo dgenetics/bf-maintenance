@@ -289,9 +289,10 @@ export function ComponentDetail() {
             void (async () => {
               setBusyId(task.id);
               try {
-                await maintenanceApi.completeTask(task.id);
+                const res = await maintenanceApi.completeTask(task.id);
                 await load();
                 await refreshSystems();
+                if (res.aieaSyncError) setError(res.aieaSyncError);
               } catch (e) {
                 setError(e instanceof Error ? e.message : "Failed");
               } finally {

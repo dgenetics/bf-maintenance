@@ -78,6 +78,8 @@ export type CompleteTaskResult = {
   task: TaskJson;
   schedule: ScheduleJson | null;
   nextTask: TaskJson | null;
+  /** Set when a linked AiEA sync failed (the BF change is kept). */
+  aieaSyncError?: string | null;
 };
 
 export const maintenanceApi = {
@@ -131,6 +133,12 @@ export const maintenanceApi = {
         status: "COMPLETED",
         completedNotes: completedNotes ?? null,
       }),
+    }),
+
+  reopenTask: (id: string) =>
+    request<CompleteTaskResult>(`/api/tasks/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "PENDING", reopen: true }),
     }),
 
   cancelTask: (id: string) =>

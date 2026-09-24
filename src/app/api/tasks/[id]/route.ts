@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import type { TaskStatus } from "@/generated/prisma/client";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { notifyAieaComplete, notifyAieaReopen } from "@/lib/aiea-client";
 import { completeMaintenanceTask } from "@/lib/complete-task";
-import { mapTask, statusForDueDate } from "@/lib/maintenance";
+import {
+  isOpenTaskStatus,
+  mapTask,
+  statusForDueDate,
+} from "@/lib/maintenance";
+import { reopenMaintenanceTask } from "@/lib/reopen-task";
 
 export const runtime = "nodejs";
 
@@ -24,6 +30,8 @@ const TASK_STATUSES: TaskStatus[] = [
  *
  * Complete: { status: "COMPLETED", completedNotes?: string }
  * For recurring schedules, advances nextDueDate and creates the next open task.
+ * Reopen: { status: "PENDING", reopen: true } — see reopenMaintenanceTask
+ * (idempotent; drops an untouched auto-spawned next occurrence). Syncs to AiEA.
  */
 export async function GET(_req: Request, ctx: Ctx) {
   const denied = await requireAuth();
@@ -49,6 +57,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
     dueDate?: string;
     status?: string;
     completedNotes?: string | null;
+    reopen?: boolean;
   };
   try {
     body = await req.json();
@@ -64,11 +73,49 @@ export async function PATCH(req: Request, ctx: Ctx) {
     if (!result) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
+    const aieaSyncError = result.alreadyComplete
+      ? null
+      : await notifyAieaComplete(id);
     return NextResponse.json({
       task: result.task,
       schedule: result.schedule,
       nextTask: result.nextTask,
+      aieaSyncError,
     });
+  }
+
+  // Reopen path: COMPLETED/CANCELLED → open (shared with AiEA integration)
+  if (
+    body.status !== undefined &&
+    isOpenTaskStatus(body.status) &&
+    body.title === undefined &&
+    body.description === undefined &&
+    body.dueDate === undefined
+  ) {
+    const existingForReopen = await db.maintenanceTask.findUnique({
+      where: { id },
+    });
+    if (
+      existingForReopen &&
+      (body.reopen === true ||
+        existingForReopen.status === "COMPLETED" ||
+        existingForReopen.status === "CANCELLED")
+    ) {
+      const result = await reopenMaintenanceTask(db, id);
+      if (!result) {
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      }
+      const aieaSyncError = result.alreadyOpen
+        ? null
+        : await notifyAieaReopen(id);
+      return NextResponse.json({
+        task: result.task,
+        schedule: null,
+        nextTask: null,
+        deletedNextTaskId: result.deletedNextTaskId,
+        aieaSyncError,
+      });
+    }
   }
 
   const existing = await db.maintenanceTask.findUnique({

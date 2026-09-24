@@ -97,3 +97,15 @@ Evidence lands in the workflow artifact `verify-evidence-<run_id>`.
 ---
 
 *Built for Beausoleil Farm, Middletown MD.*
+
+## AiEA complete/reopen sync
+
+Linked tasks use `externalId = bf-task:<MaintenanceTask.id>` on AiEA.
+
+| Env | Purpose |
+|-----|---------|
+| `BF_INTEGRATION_SECRET` | Shared Bearer / X-BF-Integration-Key (inbound AiEA + outbound) |
+| `AIEA_URL` (or `AIEA_BASE_URL`) | AiEA origin for BF→AiEA complete/reopen POSTs |
+
+Outbound calls are best-effort (log + continue). Reopen restores open status from due date; **does not** rewind schedule `lastCompletedAt` / `nextDueDate`.
+
