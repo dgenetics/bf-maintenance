@@ -132,26 +132,32 @@ export function ScheduleForm({
           placeholder="Optional details"
         />
       </Field>
-      <div className="grid grid-cols-2 gap-2">
-        <Field label="Frequency">
-          <Select
-            value={frequency}
-            onChange={(e) => setFrequency(e.target.value)}
-          >
-            {FREQUENCY_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Next due">
-          <Input
-            type="date"
-            value={nextDueDate}
-            onChange={(e) => setNextDueDate(e.target.value)}
-          />
-        </Field>
+      <div className="grid min-w-0 grid-cols-2 gap-2">
+        <div className="min-w-0">
+          <Field label="Frequency">
+            <Select
+              className="h-11 w-full min-w-0 py-0 leading-none"
+              value={frequency}
+              onChange={(e) => setFrequency(e.target.value)}
+            >
+              {FREQUENCY_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+        <div className="min-w-0 overflow-hidden">
+          <Field label="Next due">
+            <Input
+              type="date"
+              className="date-control h-11 w-full min-w-0 max-w-full py-0 leading-none"
+              value={nextDueDate}
+              onChange={(e) => setNextDueDate(e.target.value)}
+            />
+          </Field>
+        </div>
       </div>
       {frequency === "custom" && (
         <Field label="Interval (days)">

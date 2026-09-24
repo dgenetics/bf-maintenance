@@ -28,11 +28,14 @@
 
 html {
   -webkit-tap-highlight-color: transparent;
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
+  max-width: 100%;
+  overflow-x: clip;
   font-family: var(--font-sans);
   background: var(--color-cream-100);
   color: var(--color-ink);
@@ -42,3 +45,40 @@ body {
 .safe-pb {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
+
+/* date-input-mobile-clamp — iOS keeps a fat min-width + tall intrinsic chrome */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="month"],
+input[type="week"],
+.date-control {
+  display: block;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: 2.75rem;
+  max-height: 2.75rem;
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 2.75rem;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  margin: 0;
+  padding: 0;
+  height: 2.75rem;
+  line-height: 2.75rem;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  margin: 0;
+  padding: 0;
+  height: 1.25rem;
+  width: 1.25rem;
+}
+

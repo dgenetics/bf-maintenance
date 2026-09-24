@@ -27,7 +27,7 @@ function Sheet({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative z-10 flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl border border-cream-200 bg-cream-50 shadow-xl sm:mx-4 sm:rounded-2xl"
+        className="relative z-10 flex max-h-[90dvh] w-full min-w-0 max-w-[min(48rem,100vw)] flex-col overflow-hidden rounded-t-2xl border border-cream-200 bg-cream-50 shadow-xl sm:mx-4 sm:max-w-[min(48rem,calc(100vw-2rem))] sm:rounded-2xl"
       >
         <div className="flex items-center justify-between border-b border-cream-200 px-4 py-3">
           <h3 className="text-base font-semibold text-ink">{title}</h3>
@@ -35,7 +35,7 @@ function Sheet({
             Close
           </Button>
         </div>
-        <div className="overflow-y-auto px-4 py-4">{children}</div>
+        <div className="overflow-x-hidden overflow-y-auto px-4 py-4 break-words">{children}</div>
       </div>
     </div>
   );

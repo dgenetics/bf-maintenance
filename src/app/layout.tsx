@@ -15,11 +15,13 @@ export const metadata: Metadata = {
   },
 };
 
+/** Keep pinch-zoom. Next injects maximum-scale=1 unless userScalable is true — set it explicitly; never userScalable=false / maximumScale=1. */
 export const viewport: Viewport = {
   themeColor: "#2d4a3e",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  userScalable: true,
 };
 
 export default function RootLayout({
