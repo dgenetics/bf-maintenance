@@ -30,4 +30,4 @@ Preconditions:
 ## Gotchas
 
 - `GET /api/systems` still returns the full list; filtering is UI-only.
-- Category select (`Filter by category`) also affects the subtitle — reset to All categories when proving search alone.
+- Category filter UI was removed; only `?q=` drives list filtering. All non-empty category sections always show.

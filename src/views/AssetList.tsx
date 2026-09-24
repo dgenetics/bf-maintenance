@@ -11,13 +11,12 @@ import {
 } from '../types'
 import { formatMoney } from '../lib/utils'
 import { EmptyState } from '../components/EmptyState'
-import { Button, Card, Input, PageHeader, Select } from '../components/ui'
+import { Button, Card, Input, PageHeader } from '../components/ui'
 
 export function AssetList() {
   const { assets } = useData()
   const [params, setParams] = useSearchParams()
   const query = params.get('q') ?? ''
-  const category = params.get('category') ?? 'all'
 
   function setQuery(next: string) {
     const trimmed = next
@@ -33,9 +32,6 @@ export function AssetList() {
     const q = query.trim().toLowerCase()
     return [...assets]
       .filter((a) => {
-        if (category !== 'all' && normalizeCategory(a.category) !== category) {
-          return false
-        }
         if (!q) return true
         const hay = [
           a.name,
@@ -58,7 +54,7 @@ export function AssetList() {
         return hay.includes(q)
       })
       .sort((a, b) => a.name.localeCompare(b.name))
-  }, [assets, category, query])
+  }, [assets, query])
 
   const sections = useMemo(() => {
     const byCategory = new Map<AssetCategory, Asset[]>()
@@ -70,18 +66,12 @@ export function AssetList() {
       byCategory.get(bucket)!.push(asset)
     }
 
-    const order =
-      category !== 'all' &&
-      (ASSET_CATEGORIES as readonly string[]).includes(category)
-        ? [category as AssetCategory]
-        : [...ASSET_CATEGORIES]
-
-    return order
+    return [...ASSET_CATEGORIES]
       .map((cat) => ({ category: cat, items: byCategory.get(cat) ?? [] }))
       .filter((section) => section.items.length > 0)
-  }, [filtered, category])
+  }, [filtered])
 
-  const filtering = Boolean(query.trim()) || category !== 'all'
+  const filtering = Boolean(query.trim())
   const subtitle = filtering
     ? `${filtered.length} of ${assets.length} system${assets.length === 1 ? '' : 's'}`
     : `${assets.length} system${assets.length === 1 ? '' : 's'}`
@@ -101,7 +91,7 @@ export function AssetList() {
         }
       />
 
-      <div className="mb-4 space-y-2">
+      <div className="mb-4">
         <div className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted" />
           <Input
@@ -112,26 +102,6 @@ export function AssetList() {
             aria-label="Search systems"
           />
         </div>
-        <Select
-          value={category}
-          onChange={(e) => {
-            const next = e.target.value
-            if (next === 'all') {
-              params.delete('category')
-            } else {
-              params.set('category', next)
-            }
-            setParams(params, { replace: true })
-          }}
-          aria-label="Filter by category"
-        >
-          <option value="all">All categories</option>
-          {ASSET_CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </Select>
       </div>
 
       {filtered.length === 0 ? (
@@ -141,7 +111,7 @@ export function AssetList() {
           description={
             assets.length === 0
               ? 'Add the first system for the house or property.'
-              : 'Try a different search or category filter.'
+              : 'Try a different search.'
           }
           action={
             assets.length === 0 ? (
@@ -155,43 +125,31 @@ export function AssetList() {
         <div className="space-y-5">
           {sections.map((section) => (
             <section key={section.category}>
-              <div className="mb-2 flex items-center gap-2">
-                <h3 className="text-xs font-semibold tracking-wide text-forest-800 uppercase">
-                  {section.category}
-                </h3>
-                <span className="rounded-full bg-cream-200 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted">
-                  {section.items.length}
-                </span>
-              </div>
-              <div className="space-y-2">
+              <h3 className="mb-2 text-xs font-semibold tracking-wide text-forest-800 uppercase">
+                {section.category}
+              </h3>
+              <div className="flex flex-wrap items-start gap-2">
                 {section.items.map((asset) => {
                   const replaceTotal = systemReplacementTotal(asset)
                   const partCount = asset.components.length
                   return (
-                    <Link key={asset.id} to={`/assets/${asset.id}`}>
-                      <Card className="mb-2">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate font-semibold text-ink">
-                              {asset.name}
-                            </p>
-                            <p className="mt-0.5 text-xs text-muted">
-                              {partCount > 0
-                                ? `${partCount} part${partCount === 1 ? '' : 's'}`
-                                : 'No parts yet'}
-                            </p>
-                          </div>
-                          {replaceTotal > 0 ? (
-                            <div className="shrink-0 text-right">
-                              <p className="text-[10px] font-semibold tracking-wide text-muted uppercase">
-                                Replace
-                              </p>
-                              <p className="text-sm font-semibold tabular-nums">
-                                {formatMoney(replaceTotal)}
-                              </p>
-                            </div>
-                          ) : null}
-                        </div>
+                    <Link
+                      key={asset.id}
+                      to={`/assets/${asset.id}`}
+                      className="block w-fit max-w-full"
+                    >
+                      <Card className="!p-3">
+                        <p className="font-semibold text-ink">{asset.name}</p>
+                        <p className="mt-0.5 text-xs text-muted">
+                          {partCount > 0
+                            ? `${partCount} part${partCount === 1 ? '' : 's'}`
+                            : 'No parts yet'}
+                        </p>
+                        {replaceTotal > 0 ? (
+                          <p className="mt-1 text-xs font-semibold tabular-nums text-muted">
+                            {formatMoney(replaceTotal)}
+                          </p>
+                        ) : null}
                       </Card>
                     </Link>
                   )
