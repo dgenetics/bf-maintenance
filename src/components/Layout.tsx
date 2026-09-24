@@ -53,7 +53,7 @@ function HeaderPill() {
   )
 }
 
-export function Layout() {
+export function Layout({ onSignedOut }: { onSignedOut: () => void }) {
   const { pathname } = useLocation()
   const mainRef = useRef<HTMLElement>(null)
 
@@ -68,7 +68,6 @@ export function Layout() {
     document.body.scrollTop = 0
   }
 
-
   async function signOut() {
     try {
       await fetch('/api/auth/logout', {
@@ -76,7 +75,9 @@ export function Layout() {
         credentials: 'include',
       })
     } finally {
-      window.location.assign('/')
+      // Match AuthGate: flip app authState to locked so the Sign in gate
+      // appears immediately (window.location.assign('/') no-ops when already on /).
+      onSignedOut()
     }
   }
 
