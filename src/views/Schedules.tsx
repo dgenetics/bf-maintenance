@@ -14,6 +14,7 @@ import {
 import { useData } from "@/context/DataContext";
 import { ScheduleForm } from "@/components/maintenance/ScheduleForm";
 import { EmptyState } from "@/components/EmptyState";
+import { Modal } from "@/components/Modal";
 import {
   Button,
   Card,
@@ -78,41 +79,6 @@ function UrgencyChip({ urgency }: { urgency: DateBucket }) {
     >
       {URGENCY_LABEL[urgency]}
     </span>
-  );
-}
-
-function Sheet({
-  title,
-  onClose,
-  children,
-}: {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center sm:items-center">
-      <button
-        type="button"
-        aria-label="Close"
-        className="absolute inset-0 bg-ink/40"
-        onClick={onClose}
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        className="relative z-10 flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl border border-cream-200 bg-cream-50 shadow-xl sm:mx-4 sm:rounded-2xl"
-      >
-        <div className="flex items-center justify-between border-b border-cream-200 px-4 py-3">
-          <h3 className="text-base font-semibold text-ink">{title}</h3>
-          <Button size="sm" variant="ghost" onClick={onClose}>
-            Close
-          </Button>
-        </div>
-        <div className="overflow-y-auto px-4 py-4">{children}</div>
-      </div>
-    </div>
   );
 }
 
@@ -561,7 +527,7 @@ export function Schedules() {
       )}
 
       {addOpen && (
-        <Sheet
+        <Modal
           title="Add schedule"
           onClose={() => {
             setAddOpen(false);
@@ -593,11 +559,11 @@ export function Schedules() {
               </p>
             )}
           </div>
-        </Sheet>
+        </Modal>
       )}
 
       {editTarget && (
-        <Sheet
+        <Modal
           title="Edit schedule"
           onClose={() => setEditTarget(null)}
         >
@@ -620,7 +586,7 @@ export function Schedules() {
             onCancel={() => setEditTarget(null)}
             onSubmit={handleEdit}
           />
-        </Sheet>
+        </Modal>
       )}
     </div>
   );
