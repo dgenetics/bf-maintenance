@@ -5,7 +5,7 @@ Maintained verification source for Beausoleil Farm date/schedule maintenance. Re
 ## Baseline preconditions
 
 - Base URL: local `http://127.0.0.1:3100` (from `launch.sh`) **or** `https://bf-maintenance.vercel.app`.
-- `BF_AUTH_EMAIL` / `BF_AUTH_PASSWORD` set (from `.env` or secrets). Do not commit credentials.
+- `AIEA_SMOKE_EMAIL` / `AIEA_SMOKE_PASSWORD` set (from `.env` or secrets). Dedicated smoke user only — never Will’s account. Do not commit credentials.
 - `doctor.sh` green for that base URL before driving.
 - Never attach to a browser session the human already owns; use headless Playwright or a fresh context.
 - AiEA kanban lanes (icebox / backlog / current) are **out of scope**.

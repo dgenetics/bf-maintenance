@@ -45,17 +45,17 @@ fi
 
 # Seed AiEA-shaped identity DB for account login (local/CI).
 IDENTITY_DB="$OUT/aiea-identity.db"
-export BF_AUTH_EMAIL="${BF_AUTH_EMAIL:-verify@beausoleil.test}"
-export BF_AUTH_PASSWORD="${BF_AUTH_PASSWORD:-verify-pass-1234}"
+export AIEA_SMOKE_EMAIL="${AIEA_SMOKE_EMAIL:-verify@beausoleil.test}"
+export AIEA_SMOKE_PASSWORD="${AIEA_SMOKE_PASSWORD:-verify-pass-1234}"
 export BF_SESSION_SECRET="${BF_SESSION_SECRET:-verify-session-secret-change-me}"
 node "$REPO_ROOT/scripts/seed-identity-db.mjs" "$IDENTITY_DB" \
-  "$BF_AUTH_EMAIL" "$BF_AUTH_PASSWORD" "Verify User"
+  "$AIEA_SMOKE_EMAIL" "$AIEA_SMOKE_PASSWORD" "Verify User"
 
 nohup env DATABASE_URL="file:$VERIFY_DB" \
   AIEA_DATABASE_URL="file:$IDENTITY_DB" \
   BF_SESSION_SECRET="$BF_SESSION_SECRET" \
-  BF_AUTH_EMAIL="$BF_AUTH_EMAIL" \
-  BF_AUTH_PASSWORD="$BF_AUTH_PASSWORD" \
+  AIEA_SMOKE_EMAIL="$AIEA_SMOKE_EMAIL" \
+  AIEA_SMOKE_PASSWORD="$AIEA_SMOKE_PASSWORD" \
   PORT="$PORT" \
   npm run start -- -p "$PORT" -H 127.0.0.1 \
   >"$OUT/server.txt" 2>&1 &
