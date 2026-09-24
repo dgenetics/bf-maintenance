@@ -218,8 +218,7 @@ export function Schedules() {
 
   const q = params.get("q") ?? "";
   const systemId = params.get("system") ?? "all";
-  const componentId = params.get("component") ?? "all";
-  const urgency = params.get("urgency") ?? "all";
+  const addRequested = params.get("add") === "1";
 
   const componentMeta = useMemo(() => {
     const byId = new Map<
@@ -255,15 +254,6 @@ export function Schedules() {
     }
     return list;
   }, [assets]);
-
-  const componentsForSystem = useMemo(() => {
-    if (systemId === "all") {
-      return picks.map((p) => ({ id: p.componentId, label: p.label }));
-    }
-    return picks
-      .filter((p) => p.systemId === systemId)
-      .map((p) => ({ id: p.componentId, label: p.componentName }));
-  }, [picks, systemId]);
 
   const load = useCallback(async () => {
     setError(null);
@@ -307,11 +297,6 @@ export function Schedules() {
       if (systemId !== "all") {
         if (!meta || meta.systemId !== systemId) return false;
       }
-      if (componentId !== "all" && s.componentId !== componentId) return false;
-      if (urgency !== "all") {
-        const u = urgencyForNextDueDate(s.nextDueDate);
-        if (u !== urgency) return false;
-      }
       if (needle) {
         const hay = [
           s.name,
@@ -326,18 +311,28 @@ export function Schedules() {
       }
       return true;
     });
-  }, [schedules, componentMeta, systemId, componentId, urgency, q]);
+  }, [schedules, componentMeta, systemId, q]);
 
-  const filtering =
-    Boolean(q.trim()) ||
-    systemId !== "all" ||
-    componentId !== "all" ||
-    urgency !== "all";
+  const filtering = Boolean(q.trim()) || systemId !== "all";
 
   function openAdd() {
     setAddPick(null);
     setAddOpen(true);
   }
+
+  useEffect(() => {
+    if (!addRequested) return;
+    setAddPick(null);
+    setAddOpen(true);
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("add");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [addRequested, setParams]);
 
   async function handleCreate(input: CreateScheduleInput) {
     setSaving(true);
@@ -392,12 +387,6 @@ export function Schedules() {
       <PageHeader
         title="Schedules"
         subtitle="When plans come due across all systems"
-        action={
-          <Button size="sm" onClick={openAdd}>
-            <Plus className="h-4 w-4" />
-            Add schedule
-          </Button>
-        }
       />
 
       <Card className="space-y-3">
@@ -411,52 +400,22 @@ export function Schedules() {
             aria-label="Search schedules"
           />
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Field label="System">
-            <Select
-              value={systemId}
-              onChange={(e) =>
-                patchParams({ system: e.target.value, component: null })
-              }
-              aria-label="Filter by system"
-            >
-              <option value="all">All systems</option>
-              {[...assets]
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-            </Select>
-          </Field>
-          <Field label="Component">
-            <Select
-              value={componentId}
-              onChange={(e) => patchParams({ component: e.target.value })}
-              aria-label="Filter by component"
-            >
-              <option value="all">All components</option>
-              {componentsForSystem.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
+        <Field label="System">
+          <Select
+            value={systemId}
+            onChange={(e) => patchParams({ system: e.target.value })}
+            aria-label="Filter by system"
+          >
+            <option value="all">All systems</option>
+            {[...assets]
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
                 </option>
               ))}
-            </Select>
-          </Field>
-          <Field label="Urgency">
-            <Select
-              value={urgency}
-              onChange={(e) => patchParams({ urgency: e.target.value })}
-              aria-label="Filter by urgency"
-            >
-              <option value="all">All</option>
-              <option value="overdue">Overdue</option>
-              <option value="dueSoon">Due soon</option>
-              <option value="upcoming">Upcoming</option>
-            </Select>
-          </Field>
-        </div>
+          </Select>
+        </Field>
         {filtering && (
           <div className="flex justify-end">
             <Button

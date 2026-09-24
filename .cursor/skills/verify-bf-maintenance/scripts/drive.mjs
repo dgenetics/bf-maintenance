@@ -125,6 +125,9 @@ async function driveSystemsList(page, out, pin) {
     await unlock(page, pin);
   }
   await page.getByRole("heading", { level: 2, name: "Systems", exact: true }).waitFor();
+  const headerAdd = page.getByRole("banner").getByRole("link", { name: "Add system" });
+  await headerAdd.waitFor({ timeout: 10000 });
+  steps.push("header Add system pill visible");
   const search = page.getByLabel("Search systems");
   await search.fill("xyzzy-no-match-verify");
   await page.waitForTimeout(300);
@@ -231,6 +234,17 @@ async function driveSchedules(page, out, pin) {
     timeout: 20000,
   });
   steps.push("Schedules h2 visible");
+
+  const headerAdd = page.getByRole("banner").getByRole("button", { name: "Add schedule" });
+  await headerAdd.waitFor({ timeout: 10000 });
+  steps.push("header Add schedule pill visible");
+  if ((await page.getByLabel("Filter by component").count()) > 0) {
+    throw new Error("Component filter should be removed from Schedules");
+  }
+  if ((await page.getByLabel("Filter by urgency").count()) > 0) {
+    throw new Error("Urgency filter should be removed from Schedules");
+  }
+  steps.push("no Component/Urgency filters");
 
   // List or empty state — no junk creates
   const empty = page.getByText(/No schedules/i).first();
