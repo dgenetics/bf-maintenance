@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
 import { CalendarClock, CalendarRange, Plus, Wrench } from 'lucide-react'
 import { cn } from '../lib/utils'
@@ -7,6 +8,11 @@ const nav = [
   { to: '/maintenance', label: 'Chores', icon: CalendarClock, end: false },
   { to: '/schedules', label: 'Schedules', icon: CalendarRange, end: false },
 ]
+
+function isNavActive(pathname: string, to: string, end: boolean) {
+  if (end) return pathname === to || (to === '/' && pathname === '')
+  return pathname === to || pathname.startsWith(`${to}/`)
+}
 
 const addCtaClass =
   'inline-flex items-center gap-1.5 rounded-xl bg-cream-100 px-4 py-2.5 text-sm font-semibold text-forest-900 shadow-sm transition hover:bg-cream-50 active:scale-[0.98]'
@@ -48,6 +54,13 @@ function HeaderPill() {
 }
 
 export function Layout() {
+  const { pathname } = useLocation()
+  const mainRef = useRef<HTMLElement>(null)
+
+  function scrollMainToTop() {
+    mainRef.current?.scrollTo({ top: 0, behavior: 'auto' })
+  }
+
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col overflow-x-hidden bg-cream-50 shadow-sm sm:border-x sm:border-cream-200">
       <header className="sticky top-0 z-20 border-b border-cream-200 bg-forest-900 text-cream-50">
@@ -64,7 +77,10 @@ export function Layout() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-x-hidden overflow-y-auto px-4 pt-4 pb-[calc(3.75rem+1.5rem+max(0.75rem,env(safe-area-inset-bottom,0px)))]">
+      <main
+        ref={mainRef}
+        className="flex-1 overflow-x-hidden overflow-y-auto px-4 pt-4 pb-[calc(3.75rem+1.5rem+max(0.75rem,env(safe-area-inset-bottom,0px)))]"
+      >
         <Outlet />
       </main>
 
@@ -75,6 +91,11 @@ export function Layout() {
               key={to}
               to={to}
               end={end}
+              onClick={(event) => {
+                if (!isNavActive(pathname, to, end)) return
+                event.preventDefault()
+                scrollMainToTop()
+              }}
               className={({ isActive }) =>
                 cn(
                   'flex min-w-[4.5rem] flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-[11px] font-medium transition-colors',
