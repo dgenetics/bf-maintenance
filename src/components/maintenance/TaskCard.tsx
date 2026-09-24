@@ -34,12 +34,14 @@ export function TaskCard({
   subtitle,
   onComplete,
   onCancel,
+  onReopen,
   busy,
 }: {
   task: TaskJson;
   subtitle?: string;
   onComplete?: () => void;
   onCancel?: () => void;
+  onReopen?: () => void;
   busy?: boolean;
 }) {
   const open =
@@ -69,6 +71,19 @@ export function TaskCard({
             {task.completedAt
               ? ` · done ${format(parseISO(task.completedAt), "MMM d")}`
               : ""}
+            {task.status === "COMPLETED" && onReopen ? (
+              <>
+                {" · "}
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={onReopen}
+                  className="font-medium text-forest-800 hover:underline disabled:opacity-50"
+                >
+                  Reopen
+                </button>
+              </>
+            ) : null}
           </p>
         </div>
         {overdueLabel ? (

@@ -9,6 +9,7 @@ export function TaskList({
   subtitleFor,
   onComplete,
   onCancel,
+  onReopen,
   busyId,
 }: {
   tasks: TaskJson[];
@@ -16,6 +17,7 @@ export function TaskList({
   subtitleFor?: (task: TaskJson) => string | undefined;
   onComplete?: (task: TaskJson) => void;
   onCancel?: (task: TaskJson) => void;
+  onReopen?: (task: TaskJson) => void;
   busyId?: string | null;
 }) {
   if (tasks.length === 0) {
@@ -34,6 +36,7 @@ export function TaskList({
             onComplete ? () => onComplete(task) : undefined
           }
           onCancel={onCancel ? () => onCancel(task) : undefined}
+          onReopen={onReopen ? () => onReopen(task) : undefined}
         />
       ))}
     </div>

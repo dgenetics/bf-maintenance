@@ -14,6 +14,7 @@ export function UpcomingTasks({
   subtitleFor,
   onComplete,
   onCancel,
+  onReopen,
   busyId,
 }: {
   overdue: TaskJson[];
@@ -24,6 +25,7 @@ export function UpcomingTasks({
   subtitleFor?: (task: TaskJson) => string | undefined;
   onComplete?: (task: TaskJson) => void;
   onCancel?: (task: TaskJson) => void;
+  onReopen?: (task: TaskJson) => void;
   busyId?: string | null;
 }) {
   return (
@@ -79,7 +81,12 @@ export function UpcomingTasks({
             )
           }
         >
-          <TaskList tasks={completed} emptyMessage="" />
+          <TaskList
+            tasks={completed}
+            emptyMessage=""
+            onReopen={onReopen}
+            busyId={busyId}
+          />
         </Section>
       )}
       {(!completed || completed.length === 0) && (completedTotal ?? 0) > 0 && (

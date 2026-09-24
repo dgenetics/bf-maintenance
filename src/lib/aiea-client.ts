@@ -45,6 +45,10 @@ async function postAiea(
         Authorization: `Bearer ${secret}`,
         Accept: "application/json",
         "Content-Type": "application/json",
+        // Vercel Protection Bypass for Automation (preview → protected AiEA preview). Unset in prod.
+        ...(process.env.AIEA_PROTECTION_BYPASS?.trim()
+          ? { "x-vercel-protection-bypass": process.env.AIEA_PROTECTION_BYPASS.trim() }
+          : {}),
       },
       body: JSON.stringify(body),
       cache: "no-store",
@@ -60,7 +64,7 @@ async function postAiea(
     let detail = res.statusText;
     try {
       const json = (await res.json()) as { error?: string };
-      if (json.error) detail = json.error;
+      if (json.error) detail = typeof json.error === "string" ? json.error : JSON.stringify(json.error);
     } catch {
       /* ignore */
     }

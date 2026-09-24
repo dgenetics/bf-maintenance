@@ -30,6 +30,8 @@ const TASK_STATUSES: TaskStatus[] = [
  *
  * Complete: { status: "COMPLETED", completedNotes?: string }
  * For recurring schedules, advances nextDueDate and creates the next open task.
+ * Reopen: { status: "PENDING", reopen: true } — see reopenMaintenanceTask
+ * (idempotent; drops an untouched auto-spawned next occurrence). Syncs to AiEA.
  */
 export async function GET(_req: Request, ctx: Ctx) {
   const denied = await requireAuth();
@@ -55,6 +57,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
     dueDate?: string;
     status?: string;
     completedNotes?: string | null;
+    reopen?: boolean;
   };
   try {
     body = await req.json();
@@ -80,7 +83,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
     });
   }
 
-  // Reopen path: COMPLETED/CANCELLED → open status (no schedule rewind)
+  // Reopen path: COMPLETED/CANCELLED → open (shared with AiEA integration)
   if (
     body.status !== undefined &&
     isOpenTaskStatus(body.status) &&
@@ -93,7 +96,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
     });
     if (
       existingForReopen &&
-      (existingForReopen.status === "COMPLETED" ||
+      (body.reopen === true ||
+        existingForReopen.status === "COMPLETED" ||
         existingForReopen.status === "CANCELLED")
     ) {
       const result = await reopenMaintenanceTask(db, id);
@@ -107,6 +111,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
         task: result.task,
         schedule: null,
         nextTask: null,
+        deletedNextTaskId: result.deletedNextTaskId,
       });
     }
   }

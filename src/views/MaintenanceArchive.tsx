@@ -15,6 +15,7 @@ export function MaintenanceArchive() {
   const [tasks, setTasks] = useState<TaskJson[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const systemId = params.get("system") ?? "all";
   const componentId = params.get("component") ?? "all";
@@ -70,6 +71,18 @@ export function MaintenanceArchive() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  async function handleReopen(task: TaskJson) {
+    setBusyId(task.id);
+    try {
+      await maintenanceApi.reopenTask(task.id);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Reopen failed");
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   function patchParams(patch: Record<string, string | null>) {
     const next = new URLSearchParams(params);
@@ -213,6 +226,8 @@ export function MaintenanceArchive() {
               ? `${meta.systemName} · ${meta.componentName}`
               : undefined;
           }}
+          onReopen={(t) => void handleReopen(t)}
+          busyId={busyId}
         />
       )}
     </div>

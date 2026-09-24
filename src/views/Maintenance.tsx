@@ -76,6 +76,18 @@ export function Maintenance() {
     }
   }
 
+  async function handleReopen(task: TaskJson) {
+    setBusyId(task.id);
+    try {
+      await maintenanceApi.reopenTask(task.id);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Reopen failed");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function handleCancel(task: TaskJson) {
     setBusyId(task.id);
     try {
@@ -131,6 +143,7 @@ export function Maintenance() {
           subtitleFor={(t) => componentLabel.get(t.componentId)}
           onComplete={handleComplete}
           onCancel={handleCancel}
+          onReopen={handleReopen}
           busyId={busyId}
         />
       )}

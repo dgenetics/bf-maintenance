@@ -10,7 +10,8 @@ export const runtime = "nodejs";
  * Service auth only. Body: { taskId: string }
  *
  * Used by AiEA when a user reopens a linked imported farm maintenance task.
- * Does not rewind schedule (v1). Does not notify AiEA (caller is AiEA).
+ * Same reopenMaintenanceTask path as the BF UI (idempotent; drops an untouched
+ * auto-spawned next occurrence). Does not notify AiEA (caller is AiEA).
  */
 export async function POST(req: Request) {
   const denied = requireIntegrationAuth(req);

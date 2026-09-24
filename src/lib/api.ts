@@ -133,6 +133,12 @@ export const maintenanceApi = {
       }),
     }),
 
+  reopenTask: (id: string) =>
+    request<CompleteTaskResult>(`/api/tasks/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "PENDING", reopen: true }),
+    }),
+
   cancelTask: (id: string) =>
     request<CompleteTaskResult>(`/api/tasks/${id}`, {
       method: "PATCH",
