@@ -3,7 +3,7 @@
  * Playwright (CDP via system Chrome) driver for bf-maintenance.
  *
  * Usage:
- *   node drive.mjs --feature pin-gate [--base-url URL] [--run-id ID] [--pin PIN]
+ *   node drive.mjs --feature account-login [--base-url URL] [--run-id ID]
  *   node drive.mjs --feature systems-list ...
  *   node drive.mjs --feature maintenance-buckets ...
  *   node drive.mjs --feature archive ...
@@ -12,7 +12,7 @@
  *   node drive.mjs --feature auto-materialize ...
  *   node drive.mjs --feature move-component ...
  *
- * Env: VERIFY_BASE_URL / SMOKE_BASE_URL, BF_ACCESS_PIN, VERIFY_RUN_ID
+ * Env: VERIFY_BASE_URL / SMOKE_BASE_URL, BF_AUTH_EMAIL, BF_AUTH_PASSWORD, VERIFY_RUN_ID
  * Evidence written under ../evidence/<run-id>/
  */
 import { createRequire } from "node:module";
@@ -83,46 +83,49 @@ async function ariaDump(page, path) {
   writeFileSync(path, snap);
 }
 
-async function unlock(page, pin) {
-  await page.getByLabel("Access PIN").waitFor({ timeout: 20000 });
-  await page.getByLabel("Access PIN").fill(pin);
-  await page.getByRole("button", { name: "Unlock" }).click();
+async function unlock(page, creds) {
+  await page.getByLabel("Email").waitFor({ timeout: 20000 });
+  await page.getByLabel("Email").fill(creds.email);
+  await page.getByLabel("Password").fill(creds.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
   await page.getByRole("heading", { level: 2, name: "Systems", exact: true }).waitFor({
     timeout: 20000,
   });
 }
 
-async function drivePinGate(page, out, pin) {
+async function driveAccountLogin(page, out, creds) {
   const steps = [];
   await page.goto("/", { waitUntil: "networkidle" });
-  await page.getByRole("heading", { level: 1, name: "Maintenance access", exact: true }).waitFor();
-  await screenshot(page, join(out, "pin-gate-locked.png"));
-  await ariaDump(page, join(out, "pin-gate-locked.aria.txt"));
-  steps.push("locked: heading Maintenance access visible");
+  await page.getByRole("heading", { level: 1, name: "Sign in", exact: true }).waitFor();
+  await screenshot(page, join(out, "account-login-locked.png"));
+  await ariaDump(page, join(out, "account-login-locked.aria.txt"));
+  steps.push("locked: heading Sign in visible");
 
-  await page.getByLabel("Access PIN").fill("__wrong__");
-  await page.getByRole("button", { name: "Unlock" }).click();
-  await page.getByText(/Incorrect PIN/i).waitFor({ timeout: 10000 });
-  await screenshot(page, join(out, "pin-gate-wrong.png"));
-  steps.push("wrong pin: Incorrect PIN shown");
+  await page.getByLabel("Email").fill("wrong@example.com");
+  await page.getByLabel("Password").fill("__wrong__");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByText(/Invalid email or password/i).waitFor({ timeout: 10000 });
+  await screenshot(page, join(out, "account-login-wrong.png"));
+  steps.push("wrong creds: Invalid email or password shown");
 
-  await page.getByLabel("Access PIN").fill(pin);
-  await page.getByRole("button", { name: "Unlock" }).click();
+  await page.getByLabel("Email").fill(creds.email);
+  await page.getByLabel("Password").fill(creds.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
   await page.getByRole("heading", { level: 2, name: "Systems", exact: true }).waitFor({
     timeout: 20000,
   });
   await page.getByText("Beausoleil Farm").first().waitFor();
-  await screenshot(page, join(out, "pin-gate-unlocked.png"));
-  await ariaDump(page, join(out, "pin-gate-unlocked.aria.txt"));
-  steps.push("right pin: Systems heading + Beausoleil Farm chrome");
+  await screenshot(page, join(out, "account-login-unlocked.png"));
+  await ariaDump(page, join(out, "account-login-unlocked.aria.txt"));
+  steps.push("right creds: Systems heading + Beausoleil Farm chrome");
   return steps;
 }
 
-async function driveSystemsList(page, out, pin) {
+async function driveSystemsList(page, out, creds) {
   const steps = [];
   await page.goto("/", { waitUntil: "networkidle" });
-  if (await page.getByLabel("Access PIN").count()) {
-    await unlock(page, pin);
+  if (await page.getByLabel("Email").count()) {
+    await unlock(page, creds);
   }
   await page.getByRole("heading", { level: 2, name: "Systems", exact: true }).waitFor();
   const headerAdd = page.getByRole("banner").getByRole("button", { name: "Add system" });
@@ -156,11 +159,11 @@ async function driveSystemsList(page, out, pin) {
   return steps;
 }
 
-async function driveMaintenanceBuckets(page, out, pin) {
+async function driveMaintenanceBuckets(page, out, creds) {
   const steps = [];
   await page.goto("/", { waitUntil: "networkidle" });
-  if (await page.getByLabel("Access PIN").count()) {
-    await unlock(page, pin);
+  if (await page.getByLabel("Email").count()) {
+    await unlock(page, creds);
   }
   await page.getByRole("link", { name: "Chores" }).click();
   await page.waitForURL(/\/maintenance/);
@@ -180,11 +183,11 @@ async function driveMaintenanceBuckets(page, out, pin) {
   return steps;
 }
 
-async function driveArchive(page, out, pin) {
+async function driveArchive(page, out, creds) {
   const steps = [];
   await page.goto("/", { waitUntil: "networkidle" });
-  if (await page.getByLabel("Access PIN").count()) {
-    await unlock(page, pin);
+  if (await page.getByLabel("Email").count()) {
+    await unlock(page, creds);
   }
   await page.goto("/maintenance/archive", { waitUntil: "networkidle" });
   await page.getByRole("heading", { level: 2, name: "Completed archive", exact: true }).waitFor({
@@ -196,11 +199,11 @@ async function driveArchive(page, out, pin) {
   return steps;
 }
 
-async function driveStickySave(page, out, pin) {
+async function driveStickySave(page, out, creds) {
   const steps = [];
   await page.goto("/", { waitUntil: "networkidle" });
-  if (await page.getByLabel("Access PIN").count()) {
-    await unlock(page, pin);
+  if (await page.getByLabel("Email").count()) {
+    await unlock(page, creds);
   }
   await page.getByRole("banner").getByRole("button", { name: "Add system" }).click();
   const dialog = page.getByRole("dialog", { name: "Add system" });
@@ -225,11 +228,11 @@ async function driveStickySave(page, out, pin) {
   return steps;
 }
 
-async function driveSchedules(page, out, pin) {
+async function driveSchedules(page, out, creds) {
   const steps = [];
   await page.goto("/", { waitUntil: "networkidle" });
-  if (await page.getByLabel("Access PIN").count()) {
-    await unlock(page, pin);
+  if (await page.getByLabel("Email").count()) {
+    await unlock(page, creds);
   }
   await page.getByRole("link", { name: "Schedules" }).click();
   await page.waitForURL(/\/schedules/);
@@ -271,11 +274,11 @@ async function driveSchedules(page, out, pin) {
   return steps;
 }
 
-async function driveAutoMaterialize(page, out, pin) {
+async function driveAutoMaterialize(page, out, creds) {
   const steps = [];
   await page.goto("/", { waitUntil: "networkidle" });
-  if (await page.getByLabel("Access PIN").count()) {
-    await unlock(page, pin);
+  if (await page.getByLabel("Email").count()) {
+    await unlock(page, creds);
   }
   await page.goto("/maintenance", { waitUntil: "networkidle" });
   await page.getByRole("heading", { level: 2, name: "Chores", exact: true }).waitFor({
@@ -308,11 +311,11 @@ async function driveAutoMaterialize(page, out, pin) {
 }
 
 
-async function driveMoveComponent(page, out, pin) {
+async function driveMoveComponent(page, out, creds) {
   const steps = [];
   await page.goto("/", { waitUntil: "networkidle" });
-  if (await page.getByLabel("Access PIN").count()) {
-    await unlock(page, pin);
+  if (await page.getByLabel("Email").count()) {
+    await unlock(page, creds);
   }
 
   // Use in-page fetch so we share the browser cookie jar from unlock.
@@ -475,7 +478,8 @@ async function driveMoveComponent(page, out, pin) {
 
 
 const FEATURES = {
-  "pin-gate": drivePinGate,
+  "account-login": driveAccountLogin,
+  "pin-gate": driveAccountLogin,
   "systems-list": driveSystemsList,
   "maintenance-buckets": driveMaintenanceBuckets,
   archive: driveArchive,
@@ -487,7 +491,7 @@ const FEATURES = {
 
 async function main() {
   loadDotEnv();
-  const feature = arg("--feature", "pin-gate");
+    const feature = arg("--feature", "account-login");
   if (!FEATURES[feature]) {
     console.error(
       `unknown feature ${feature}; choose: ${Object.keys(FEATURES).join(", ")}`,
@@ -499,9 +503,12 @@ async function main() {
     process.env.VERIFY_BASE_URL ||
     process.env.SMOKE_BASE_URL ||
     "http://127.0.0.1:3100";
-  const pin = arg("--pin", null) || process.env.BF_ACCESS_PIN;
-  if (!pin) {
-    console.error("BF_ACCESS_PIN required");
+  const creds = {
+    email: arg("--email", null) || process.env.BF_AUTH_EMAIL,
+    password: arg("--password", null) || process.env.BF_AUTH_PASSWORD,
+  };
+  if (!creds.email || !creds.password) {
+    console.error("BF_AUTH_EMAIL and BF_AUTH_PASSWORD required");
     process.exit(2);
   }
   const id = runId();
@@ -527,7 +534,7 @@ async function main() {
 
   let steps;
   try {
-    steps = await FEATURES[feature](page, out, pin);
+    steps = await FEATURES[feature](page, out, creds);
   } finally {
     await browser.close();
   }
@@ -537,7 +544,7 @@ async function main() {
     base,
     runId: id,
     steps,
-    pinSource: process.env.BF_ACCESS_PIN ? "BF_ACCESS_PIN" : "arg",
+    authEmail: creds.email,
     sha: gitShort(),
     finished: new Date().toISOString(),
   };

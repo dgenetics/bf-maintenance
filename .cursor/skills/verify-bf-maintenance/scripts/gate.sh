@@ -4,20 +4,23 @@
 #
 # Usage:
 #   VERIFY_BASE_URL=https://bf-maintenance.vercel.app gate.sh
-#   gate.sh --local          # launch on 3100, doctor, drive pin-gate, cleanup
+#   gate.sh --local          # launch on 3100, doctor, drive account-login, cleanup
 #   gate.sh --feature systems-list
-#   gate.sh --feature pin-gate --feature schedules
-#   gate.sh --feature pin-gate,schedules,auto-materialize
-#   VERIFY_FEATURES=pin-gate,schedules gate.sh --local
+#   gate.sh --feature account-login --feature schedules
+#   gate.sh --feature account-login,schedules,auto-materialize
+#   VERIFY_FEATURES=account-login,schedules gate.sh --local
 #
-# Env: BF_ACCESS_PIN, VERIFY_BASE_URL / SMOKE_BASE_URL,
+# Env: BF_AUTH_EMAIL / BF_AUTH_PASSWORD, VERIFY_BASE_URL / SMOKE_BASE_URL,
 #      VERIFY_FEATURE (single, legacy) or VERIFY_FEATURES (comma-separated).
-# Default when unset: pin-gate (local ergonomics); CI passes the full list.
+# Default when unset: account-login (local ergonomics); CI passes the full list.
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/lib.sh"
 load_env
+export BF_AUTH_EMAIL="${BF_AUTH_EMAIL:-verify@beausoleil.test}"
+export BF_AUTH_PASSWORD="${BF_AUTH_PASSWORD:-verify-pass-1234}"
+export BF_SESSION_SECRET="${BF_SESSION_SECRET:-verify-session-secret-change-me}"
 
 LOCAL=0
 CLEANUP=0
@@ -52,7 +55,7 @@ done
 FEATURES=()
 declare -A SEEN=()
 if [[ ${#FEATURES_RAW[@]} -eq 0 ]]; then
-  FEATURES=("pin-gate")
+  FEATURES=("account-login")
 else
   for raw in "${FEATURES_RAW[@]}"; do
     IFS=',' read -ra PARTS <<< "$raw"

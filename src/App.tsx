@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { DataProvider, useData } from "./context/DataContext";
 import { Layout } from "./components/Layout";
-import { PinGate } from "./components/PinGate";
+import { AuthGate } from "./components/AuthGate";
 import { cleanupLegacyClient } from "./lib/cleanup-legacy";
 import { AssetList } from "./views/AssetList";
 import { AssetDetail } from "./views/AssetDetail";
@@ -122,7 +122,7 @@ export default function App() {
 
   if (authState === "locked") {
     return (
-      <PinGate
+      <AuthGate
         onSuccess={() => {
           setAuthState("unlocked");
         }}
