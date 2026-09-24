@@ -49,7 +49,7 @@ function HeaderPill() {
 
 export function Layout() {
   return (
-    <div className="mx-auto flex min-h-dvh max-w-3xl flex-col bg-cream-50 shadow-sm sm:border-x sm:border-cream-200">
+    <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col overflow-x-hidden bg-cream-50 shadow-sm sm:border-x sm:border-cream-200">
       <header className="sticky top-0 z-20 border-b border-cream-200 bg-forest-900 text-cream-50">
         <div className="flex items-center justify-between px-4 py-3">
           <div>
@@ -64,7 +64,7 @@ export function Layout() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-4 pt-4 pb-[calc(3.75rem+1.5rem+max(0.75rem,env(safe-area-inset-bottom,0px)))]">
+      <main className="flex-1 overflow-x-hidden overflow-y-auto px-4 pt-4 pb-[calc(3.75rem+1.5rem+max(0.75rem,env(safe-area-inset-bottom,0px)))]">
         <Outlet />
       </main>
 

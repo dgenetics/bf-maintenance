@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   },
 };
 
+/** Keep pinch-zoom: do not set maximumScale / userScalable=false. */
 export const viewport: Viewport = {
   themeColor: "#2d4a3e",
   width: "device-width",

@@ -132,7 +132,7 @@ export function ScheduleForm({
           placeholder="Optional details"
         />
       </Field>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
         <Field label="Frequency">
           <Select
             value={frequency}

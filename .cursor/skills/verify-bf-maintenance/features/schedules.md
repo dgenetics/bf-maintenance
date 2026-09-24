@@ -37,3 +37,4 @@ Preconditions:
 - Header CTA on `/schedules` is **+ Add schedule** (not a page-name badge). PageHeader no longer has a body Add; empty-state Add may still appear when the list is empty.
 - List filters are **System** + search only — Component and Urgency filter controls (and `?component=` / `?urgency=`) were removed. Urgency chips on rows remain.
 - Header Add sets `?add=1` briefly; the page opens a vertically centered Add schedule modal and clears the param.
+- Mobile: shared `Input`/`Textarea`/`Select` use ≥16px (`text-base`) so iOS does not auto-zoom when Add schedule / other modals autofocus a field. Do not reintroduce `text-sm` on those controls; viewport must stay user-zoomable (no `maximum-scale` / `user-scalable=no`).

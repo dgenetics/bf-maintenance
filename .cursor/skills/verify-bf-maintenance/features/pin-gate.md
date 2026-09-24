@@ -32,3 +32,4 @@ Preconditions:
 - Placeholder / wrong env PIN fails unlock even when the UI is healthy — check `BF_ACCESS_PIN` against the deployment.
 - Vercel Deployment Protection (SSO) can sit in front of the app PIN on Preview; production `bf-maintenance.vercel.app` uses the app PIN only.
 - SPA may briefly show `Checking access…` before the gate; wait for `Access PIN`, not a fixed sleep alone.
+- PIN field is ≥16px so iOS Safari does not auto-zoom on autofocus; pinch-zoom stays allowed via viewport meta.

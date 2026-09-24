@@ -182,7 +182,7 @@ function ComponentFields({
       <p className="pt-1 text-[10px] font-semibold tracking-wide text-forest-800 uppercase">
         Purchase & replacement
       </p>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
         <Field label="Purchase date">
           <Input
             type="date"
