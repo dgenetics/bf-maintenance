@@ -1,6 +1,6 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
-import { CalendarClock, CalendarRange, Plus, Wrench } from 'lucide-react'
+import { CalendarClock, CalendarRange, LogOut, MoreHorizontal, Plus, Wrench } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 const nav = [
@@ -53,7 +53,57 @@ function HeaderPill() {
   )
 }
 
-export function Layout() {
+function HeaderOverflowMenu({ onSignOut }: { onSignOut: () => void }) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDoc = (e: MouseEvent) => {
+      if (!menuRef.current) return
+      if (!menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [menuOpen])
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        type="button"
+        className="rounded-lg p-1.5 text-cream-300 transition hover:bg-forest-800 hover:text-cream-50"
+        aria-label="More"
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+        title="More"
+        onClick={() => setMenuOpen((v) => !v)}
+      >
+        <MoreHorizontal className="h-5 w-5" strokeWidth={1.75} />
+      </button>
+      {menuOpen && (
+        <div
+          role="menu"
+          className="absolute right-0 z-30 mt-1 w-44 overflow-hidden rounded-xl border border-cream-200 bg-white py-1 shadow-lg"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-muted hover:bg-cream-100 hover:text-ink"
+            onClick={() => {
+              setMenuOpen(false)
+              onSignOut()
+            }}
+          >
+            <LogOut className="h-3.5 w-3.5" strokeWidth={2} />
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function Layout({ onSignedOut }: { onSignedOut: () => void }) {
   const { pathname } = useLocation()
   const mainRef = useRef<HTMLElement>(null)
 
@@ -68,6 +118,19 @@ export function Layout() {
     document.body.scrollTop = 0
   }
 
+  async function signOut() {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } finally {
+      // Match AuthGate: flip app authState to locked so the Sign in gate
+      // appears immediately (window.location.assign('/') no-ops when already on /).
+      onSignedOut()
+    }
+  }
+
   return (
     <div className="mx-auto flex h-dvh max-h-dvh w-full max-w-3xl flex-col overflow-x-hidden overflow-y-hidden bg-cream-50 shadow-sm sm:border-x sm:border-cream-200">
       <header className="shrink-0 z-20 border-b border-cream-200 bg-forest-900 text-cream-50">
@@ -80,7 +143,10 @@ export function Layout() {
               Maintenance
             </h1>
           </div>
-          <HeaderPill />
+          <div className="flex items-center gap-2">
+            <HeaderPill />
+            <HeaderOverflowMenu onSignOut={() => void signOut()} />
+          </div>
         </div>
       </header>
 

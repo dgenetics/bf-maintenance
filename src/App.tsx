@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { DataProvider, useData } from "./context/DataContext";
 import { Layout } from "./components/Layout";
-import { PinGate } from "./components/PinGate";
+import { AuthGate } from "./components/AuthGate";
 import { cleanupLegacyClient } from "./lib/cleanup-legacy";
 import { AssetList } from "./views/AssetList";
 import { AssetDetail } from "./views/AssetDetail";
@@ -15,7 +15,7 @@ import { Schedules } from "./views/Schedules";
 
 const SW_RELOAD_KEY = "bf-sw-cleaned";
 
-function LoadingShell() {
+function LoadingShell({ onSignedOut }: { onSignedOut: () => void }) {
   const { loading, error, refresh } = useData();
   if (loading) {
     return (
@@ -52,7 +52,7 @@ function LoadingShell() {
   }
   return (
     <Routes>
-      <Route element={<Layout />}>
+      <Route element={<Layout onSignedOut={onSignedOut} />}>
         <Route index element={<AssetList />} />
         <Route path="maintenance" element={<Maintenance />} />
         <Route path="maintenance/archive" element={<MaintenanceArchive />} />
@@ -122,7 +122,7 @@ export default function App() {
 
   if (authState === "locked") {
     return (
-      <PinGate
+      <AuthGate
         onSuccess={() => {
           setAuthState("unlocked");
         }}
@@ -133,7 +133,7 @@ export default function App() {
   return (
     <DataProvider>
       <BrowserRouter>
-        <LoadingShell />
+        <LoadingShell onSignedOut={() => setAuthState("locked")} />
       </BrowserRouter>
     </DataProvider>
   );

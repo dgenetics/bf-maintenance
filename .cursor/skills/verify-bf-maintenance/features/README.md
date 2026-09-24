@@ -5,7 +5,7 @@ Maintained verification source for Beausoleil Farm date/schedule maintenance. Re
 ## Baseline preconditions
 
 - Base URL: local `http://127.0.0.1:3100` (from `launch.sh`) **or** `https://bf-maintenance.vercel.app`.
-- `BF_ACCESS_PIN` set (from `.env` or secrets). Do not commit the pin.
+- `BF_AUTH_EMAIL` / `BF_AUTH_PASSWORD` set (from `.env` or secrets). Do not commit credentials.
 - `doctor.sh` green for that base URL before driving.
 - Never attach to a browser session the human already owns; use headless Playwright or a fresh context.
 - AiEA kanban lanes (icebox / backlog / current) are **out of scope**.
@@ -13,9 +13,9 @@ Maintained verification source for Beausoleil Farm date/schedule maintenance. Re
 ## Driving conventions
 
 - Harness: `node .cursor/skills/verify-bf-maintenance/scripts/drive.mjs --feature <id> --base-url <url>`.
-- Prefer ARIA roles / accessible names (`Access PIN`, `Search systems`, `Unlock`, nav link `Chores`). Page titles are PageHeader **h2** — use `getByRole('heading', { level: 2, name: ... })` so Layout chrome h1 `Maintenance` (app title) does not collide.
+- Prefer ARIA roles / accessible names (`Email`, `Password`, `Sign in`, `Search systems`, nav link `Chores`). Page titles are PageHeader **h2** — use `getByRole('heading', { level: 2, name: ... })` so Layout chrome h1 `Maintenance` (app title) does not collide.
 - Start from locked or unlocked state as each recipe’s preconditions state.
-- Mutations on live: avoid creating junk; prefer read-only paths (`pin-gate`, search with disposable query, buckets, archive view, sticky-save geometry).
+- Mutations on live: avoid creating junk; prefer read-only paths (`account-login`, search with disposable query, buckets, archive view, sticky-save geometry).
 - Restore or avoid fixture pollution; never delete `evidence/` in cleanup.
 
 ## Proof and skip reporting
@@ -30,7 +30,7 @@ Each feature file: H1 + one paragraph, then exactly four H2s — `Sub-features`,
 
 ## Features
 
-- [Pin gate](./pin-gate.md) — unlock / reject / session.
+- [Account login](./account-login.md) — sign-in / reject / session.
 - [Systems list + search](./systems-list.md) — list, `?q=` sync, honest counts.
 - [Maintenance date buckets](./maintenance-buckets.md) — Overdue / Due soon / Upcoming.
 - [Completed archive](./archive.md) — history + filters.

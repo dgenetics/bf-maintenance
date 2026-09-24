@@ -1,5 +1,6 @@
 # Poteto verify gate for bf-maintenance.
-# Requires repo secret BF_ACCESS_PIN (same PIN the app unlocks with).
+# Requires repo secrets BF_AUTH_EMAIL + BF_AUTH_PASSWORD (AiEA-same test account),
+# or relies on launch.sh defaults + seeded identity DB for --local.
 name: verify
 
 on:
@@ -17,7 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      BF_ACCESS_PIN: ${{ secrets.BF_ACCESS_PIN }}
+      BF_AUTH_EMAIL: ${{ secrets.BF_AUTH_EMAIL }}
+      BF_AUTH_PASSWORD: ${{ secrets.BF_AUTH_PASSWORD }}
+      BF_SESSION_SECRET: ${{ secrets.BF_SESSION_SECRET }}
       # Local verify DB only — not Turso
       DATABASE_URL: file:./dev.db
       BF_INTEGRATION_SECRET: ci-local-integration-secret
@@ -26,13 +29,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Require BF_ACCESS_PIN secret
-        run: |
-          if [ -z "${BF_ACCESS_PIN}" ]; then
-            echo "::error::Repo secret BF_ACCESS_PIN is required for verify. Set it under Settings → Secrets and variables → Actions (same PIN used to unlock the app)."
-            exit 1
-          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -44,7 +40,9 @@ jobs:
         run: |
           printf '%s\n' \
             "DATABASE_URL=\"file:./dev.db\"" \
-            "BF_ACCESS_PIN=\"${BF_ACCESS_PIN}\"" \
+            "BF_SESSION_SECRET=\"${BF_SESSION_SECRET}\"" \
+            "BF_AUTH_EMAIL=\"${BF_AUTH_EMAIL}\"" \
+            "BF_AUTH_PASSWORD=\"${BF_AUTH_PASSWORD}\"" \
             "BF_INTEGRATION_SECRET=\"${BF_INTEGRATION_SECRET}\"" \
             > .env
 
@@ -74,7 +72,7 @@ jobs:
           export PATH="$(dirname "${PLAYWRIGHT_CHROME_PATH:-/usr/bin/google-chrome}"):$PATH"
           chmod +x .cursor/skills/verify-bf-maintenance/scripts/*.sh
           ./.cursor/skills/verify-bf-maintenance/scripts/gate.sh --local \
-            --feature pin-gate,systems-list,maintenance-buckets,archive,sticky-save,schedules,auto-materialize
+            --feature account-login,systems-list,maintenance-buckets,archive,sticky-save,schedules,auto-materialize
 
       - name: Upload verify evidence
         if: always()

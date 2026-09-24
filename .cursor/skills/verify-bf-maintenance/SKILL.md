@@ -2,7 +2,7 @@
 name: verify-bf-maintenance
 description: >-
   Drive bf-maintenance (Beausoleil Farm date/schedule maintenance web app) like
-  a user: launch, doctor instance health, Playwright paths for pin gate /
+  a user: launch, doctor instance health, Playwright paths for account login /
   systems / buckets / archive / sticky save / schedules / auto-materialize / move-component. Use before merge/ship or when asked
   to verify this repo. Not AiEA kanban.
 ---
@@ -13,7 +13,7 @@ Beausoleil Farm **date/schedule** maintenance app (systems, components, schedule
 
 Evidence root (survives cleanup): `.cursor/skills/verify-bf-maintenance/evidence/<run-id>/`
 
-Default live target: `https://bf-maintenance.vercel.app` (PIN from `BF_ACCESS_PIN`; team test pin may be shared out-of-band). Prefer an agent-owned local instance on port **3100** when mutating data.
+Default live target: `https://bf-maintenance.vercel.app` (credentials from `BF_AUTH_EMAIL` / `BF_AUTH_PASSWORD` (AiEA-same identity)). Prefer an agent-owned local instance on port **3100** when mutating data.
 
 ## Launch
 
@@ -33,7 +33,7 @@ Or point at live / already-running:
 
 ```bash
 export VERIFY_BASE_URL=https://bf-maintenance.vercel.app
-export BF_ACCESS_PIN   # from .env or secrets
+export BF_AUTH_EMAIL BF_AUTH_PASSWORD   # from .env or secrets
 ```
 
 Teardown: `./.cursor/skills/verify-bf-maintenance/scripts/cleanup.sh [run-id]` — kills only the PID in that run’s `server.pid`. Never deletes `evidence/`.
@@ -43,15 +43,15 @@ Teardown: `./.cursor/skills/verify-bf-maintenance/scripts/cleanup.sh [run-id]` �
 Instance health (port, auth, data plane) — **not** a compile-only gate:
 
 ```bash
-VERIFY_BASE_URL=… BF_ACCESS_PIN=… \
+VERIFY_BASE_URL=… BF_AUTH_EMAIL=… BF_AUTH_PASSWORD=… \
   ./.cursor/skills/verify-bf-maintenance/scripts/doctor.sh
 ```
 
 Must pass:
 
 1. `GET /` → 200
-2. Wrong PIN → `401`/`403` on `POST /api/auth/login`
-3. Correct PIN → 200 + `bf_session` cookie
+2. Wrong password → `401`/`403` on `POST /api/auth/login`
+3. Correct email/password → 200 + `bf_session` cookie
 4. `GET /api/auth/me` → authenticated
 5. `GET /api/systems` and `GET /api/tasks` → JSON arrays
 
@@ -65,14 +65,14 @@ Harness: **Playwright** via `playwright-core` + system Chrome (`channel: 'chrome
 (cd .cursor/skills/verify-bf-maintenance/scripts && npm install)  # once
 
 node .cursor/skills/verify-bf-maintenance/scripts/drive.mjs \
-  --feature pin-gate \
+  --feature account-login \
   --base-url "$VERIFY_BASE_URL" \
   --run-id "$VERIFY_RUN_ID"
 ```
 
-Features: `pin-gate` | `systems-list` | `maintenance-buckets` | `archive` | `sticky-save` | `schedules` | `auto-materialize` | `move-component`.
+Features: `account-login` | `systems-list` | `maintenance-buckets` | `archive` | `sticky-save` | `schedules` | `auto-materialize` | `move-component`.
 
-Stable handles: `getByLabel('Access PIN')`, `getByRole('button', { name: 'Unlock' })`, `getByLabel('Search systems')`, nav link `Chores`, page headings via `getByRole('heading', { level: 2, name: ... })` for `Systems` / `Chores` / `Completed archive` / `Add system` (Layout chrome is a separate h1 `Maintenance` — never use bare `heading` name `Maintenance` for the page title). On Systems home / Schedules, the header CTA is button `Add system` / `Add schedule` (opens a centered modal; not a page-name badge).
+Stable handles: `getByLabel('Email')`, `getByLabel('Password')`, `getByRole('button', { name: 'Sign in' })`, `getByLabel('Search systems')`, nav link `Chores`, page headings via `getByRole('heading', { level: 2, name: ... })` for `Systems` / `Chores` / `Completed archive` / `Add system` (Layout chrome is a separate h1 `Maintenance` — never use bare `heading` name `Maintenance` for the page title). On Systems home / Schedules, the header CTA is button `Add system` / `Add schedule` (opens a centered modal; not a page-name badge).
 
 Recipes live in `features/`. Prefer those over inventing selectors.
 
@@ -114,12 +114,11 @@ All under `.cursor/skills/verify-bf-maintenance/scripts/`:
 
 ```bash
 # against live
-BF_ACCESS_PIN=… VERIFY_BASE_URL=https://bf-maintenance.vercel.app \
-  ./.cursor/skills/verify-bf-maintenance/scripts/gate.sh --feature pin-gate
+BF_AUTH_EMAIL=… BF_AUTH_PASSWORD=… VERIFY_BASE_URL=https://bf-maintenance.vercel.app \
+  ./.cursor/skills/verify-bf-maintenance/scripts/gate.sh --feature account-login
 
 # local agent instance
-BF_ACCESS_PIN=… \
-  ./.cursor/skills/verify-bf-maintenance/scripts/gate.sh --local --feature pin-gate
+./.cursor/skills/verify-bf-maintenance/scripts/gate.sh --local --feature account-login
 ```
 
 ## Feature map

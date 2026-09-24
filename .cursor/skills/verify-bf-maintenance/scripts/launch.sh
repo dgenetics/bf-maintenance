@@ -21,7 +21,7 @@ fi
 cd "$REPO_ROOT"
 if [[ ! -f .env ]]; then
   cp .env.example .env
-  echo "copied .env.example → .env (set BF_ACCESS_PIN before driving)" >&2
+  echo "copied .env.example → .env (set BF_SESSION_SECRET + identity DB before driving)" >&2
 fi
 if [[ ! -d node_modules ]]; then
   npm ci
@@ -43,7 +43,19 @@ if [[ ! -f "$VERIFY_DB" ]]; then
   fi
 fi
 
+# Seed AiEA-shaped identity DB for account login (local/CI).
+IDENTITY_DB="$OUT/aiea-identity.db"
+export BF_AUTH_EMAIL="${BF_AUTH_EMAIL:-verify@beausoleil.test}"
+export BF_AUTH_PASSWORD="${BF_AUTH_PASSWORD:-verify-pass-1234}"
+export BF_SESSION_SECRET="${BF_SESSION_SECRET:-verify-session-secret-change-me}"
+node "$REPO_ROOT/scripts/seed-identity-db.mjs" "$IDENTITY_DB" \
+  "$BF_AUTH_EMAIL" "$BF_AUTH_PASSWORD" "Verify User"
+
 nohup env DATABASE_URL="file:$VERIFY_DB" \
+  AIEA_DATABASE_URL="file:$IDENTITY_DB" \
+  BF_SESSION_SECRET="$BF_SESSION_SECRET" \
+  BF_AUTH_EMAIL="$BF_AUTH_EMAIL" \
+  BF_AUTH_PASSWORD="$BF_AUTH_PASSWORD" \
   PORT="$PORT" \
   npm run start -- -p "$PORT" -H 127.0.0.1 \
   >"$OUT/server.txt" 2>&1 &
