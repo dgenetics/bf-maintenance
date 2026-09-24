@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
-import { CalendarClock, CalendarRange, Plus, Wrench } from 'lucide-react'
+import { CalendarClock, CalendarRange, LogOut, Plus, Wrench } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 const nav = [
@@ -68,6 +68,18 @@ export function Layout() {
     document.body.scrollTop = 0
   }
 
+
+  async function signOut() {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } finally {
+      window.location.assign('/')
+    }
+  }
+
   return (
     <div className="mx-auto flex h-dvh max-h-dvh w-full max-w-3xl flex-col overflow-x-hidden overflow-y-hidden bg-cream-50 shadow-sm sm:border-x sm:border-cream-200">
       <header className="shrink-0 z-20 border-b border-cream-200 bg-forest-900 text-cream-50">
@@ -80,7 +92,18 @@ export function Layout() {
               Maintenance
             </h1>
           </div>
-          <HeaderPill />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-cream-300 transition hover:bg-forest-800 hover:text-cream-50"
+              aria-label="Sign out"
+            >
+              <LogOut className="h-3.5 w-3.5" strokeWidth={2} />
+              Sign out
+            </button>
+            <HeaderPill />
+          </div>
         </div>
       </header>
 

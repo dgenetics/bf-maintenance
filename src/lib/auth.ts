@@ -4,7 +4,9 @@ import { NextResponse } from "next/server";
 import type { IdentityUser } from "@/lib/aiea-identity";
 
 export const SESSION_COOKIE = "bf_session";
-const MAX_AGE_SEC = 60 * 60 * 24 * 30;
+// Persistent until explicit Sign out — no idle timeout.
+const SESSION_DAYS = 365;
+const MAX_AGE_SEC = 60 * 60 * 24 * SESSION_DAYS;
 const SESSION_VERSION = "v2";
 
 export type SessionUser = IdentityUser;
