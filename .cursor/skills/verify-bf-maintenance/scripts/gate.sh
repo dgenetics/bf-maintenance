@@ -10,7 +10,7 @@
 #   gate.sh --feature account-login,schedules,auto-materialize
 #   VERIFY_FEATURES=account-login,schedules gate.sh --local
 #
-# Env: BF_AUTH_EMAIL / BF_AUTH_PASSWORD, VERIFY_BASE_URL / SMOKE_BASE_URL,
+# Env: AIEA_SMOKE_EMAIL / AIEA_SMOKE_PASSWORD, VERIFY_BASE_URL / SMOKE_BASE_URL,
 #      VERIFY_FEATURE (single, legacy) or VERIFY_FEATURES (comma-separated).
 # Default when unset: account-login (local ergonomics); CI passes the full list.
 set -euo pipefail
@@ -18,8 +18,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/lib.sh"
 load_env
-export BF_AUTH_EMAIL="${BF_AUTH_EMAIL:-verify@beausoleil.test}"
-export BF_AUTH_PASSWORD="${BF_AUTH_PASSWORD:-verify-pass-1234}"
+export AIEA_SMOKE_EMAIL="${AIEA_SMOKE_EMAIL:-verify@beausoleil.test}"
+export AIEA_SMOKE_PASSWORD="${AIEA_SMOKE_PASSWORD:-verify-pass-1234}"
 export BF_SESSION_SECRET="${BF_SESSION_SECRET:-verify-session-secret-change-me}"
 
 LOCAL=0

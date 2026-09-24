@@ -12,7 +12,7 @@
  *   node drive.mjs --feature auto-materialize ...
  *   node drive.mjs --feature move-component ...
  *
- * Env: VERIFY_BASE_URL / SMOKE_BASE_URL, BF_AUTH_EMAIL, BF_AUTH_PASSWORD, VERIFY_RUN_ID
+ * Env: VERIFY_BASE_URL / SMOKE_BASE_URL, AIEA_SMOKE_EMAIL, AIEA_SMOKE_PASSWORD, VERIFY_RUN_ID
  * Evidence written under ../evidence/<run-id>/
  */
 import { createRequire } from "node:module";
@@ -504,11 +504,11 @@ async function main() {
     process.env.SMOKE_BASE_URL ||
     "http://127.0.0.1:3100";
   const creds = {
-    email: arg("--email", null) || process.env.BF_AUTH_EMAIL,
-    password: arg("--password", null) || process.env.BF_AUTH_PASSWORD,
+    email: arg("--email", null) || process.env.AIEA_SMOKE_EMAIL,
+    password: arg("--password", null) || process.env.AIEA_SMOKE_PASSWORD,
   };
   if (!creds.email || !creds.password) {
-    console.error("BF_AUTH_EMAIL and BF_AUTH_PASSWORD required");
+    console.error("AIEA_SMOKE_EMAIL and AIEA_SMOKE_PASSWORD required");
     process.exit(2);
   }
   const id = runId();

@@ -1,6 +1,6 @@
 # Poteto verify gate for bf-maintenance.
-# Requires repo secrets BF_AUTH_EMAIL + BF_AUTH_PASSWORD (AiEA-same test account),
-# or relies on launch.sh defaults + seeded identity DB for --local.
+# Requires repo secrets AIEA_SMOKE_EMAIL + AIEA_SMOKE_PASSWORD (dedicated AiEA smoke user).
+# Local --local seeds that email into a disposable identity DB; never use a personal account.
 name: verify
 
 on:
@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      BF_AUTH_EMAIL: ${{ secrets.BF_AUTH_EMAIL }}
-      BF_AUTH_PASSWORD: ${{ secrets.BF_AUTH_PASSWORD }}
+      AIEA_SMOKE_EMAIL: ${{ secrets.AIEA_SMOKE_EMAIL }}
+      AIEA_SMOKE_PASSWORD: ${{ secrets.AIEA_SMOKE_PASSWORD }}
       BF_SESSION_SECRET: ${{ secrets.BF_SESSION_SECRET }}
       # Local verify DB only — not Turso
       DATABASE_URL: file:./dev.db
@@ -29,6 +29,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Require AIEA_SMOKE_* secrets
+        run: |
+          if [ -z "${AIEA_SMOKE_EMAIL}" ] || [ -z "${AIEA_SMOKE_PASSWORD}" ]; then
+            echo "::error::Repo secrets AIEA_SMOKE_EMAIL and AIEA_SMOKE_PASSWORD are required for verify (dedicated AiEA smoke user — never a personal account)."
+            exit 1
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -41,8 +48,8 @@ jobs:
           printf '%s\n' \
             "DATABASE_URL=\"file:./dev.db\"" \
             "BF_SESSION_SECRET=\"${BF_SESSION_SECRET}\"" \
-            "BF_AUTH_EMAIL=\"${BF_AUTH_EMAIL}\"" \
-            "BF_AUTH_PASSWORD=\"${BF_AUTH_PASSWORD}\"" \
+            "AIEA_SMOKE_EMAIL=\"${AIEA_SMOKE_EMAIL}\"" \
+            "AIEA_SMOKE_PASSWORD=\"${AIEA_SMOKE_PASSWORD}\"" \
             "BF_INTEGRATION_SECRET=\"${BF_INTEGRATION_SECRET}\"" \
             > .env
 
