@@ -19,15 +19,17 @@ Account gate locks the farm maintenance UI until the shared AiEA email/password 
 Preconditions:
 
 - `doctor.sh` green for the target base URL.
-- `BF_AUTH_EMAIL` / `BF_AUTH_PASSWORD` match a User row in the AiEA identity DB.
+- `AIEA_SMOKE_EMAIL` / `AIEA_SMOKE_PASSWORD` match a User row in the AiEA identity DB.
 - Fresh browser context (no prior `bf_session`).
 
 - **See lock screen.** Open `/`. Run `node scripts/drive.mjs --feature account-login --base-url <url>`. Heading `getByRole('heading', { level: 1, name: 'Sign in' })` and Email/Password fields appear; capture `account-login-locked.png`.
 - **Reject wrong password.** Fill Email/Password with bad values, click `Sign in`. Status `Invalid email or password` appears; still locked. Capture `account-login-wrong.png`.
-- **Unlock.** Fill with `$BF_AUTH_EMAIL` / `$BF_AUTH_PASSWORD`, click `Sign in`. Page heading `getByRole('heading', { level: 2, name: 'Systems', exact: true })` and chrome `Beausoleil Farm` appear. Capture `account-login-unlocked.png` + aria JSON.
+- **Unlock.** Fill with `$AIEA_SMOKE_EMAIL` / `$AIEA_SMOKE_PASSWORD`, click `Sign in`. Page heading `getByRole('heading', { level: 2, name: 'Systems', exact: true })` and chrome `Beausoleil Farm` appear. Capture `account-login-unlocked.png` + aria JSON.
 - **Proof.** Artifacts show locked → error → Systems. Optional: `GET /api/auth/me` with the session cookie returns authenticated (doctor already covers this).
 
 ## Gotchas
+
+- Use the **smoke user** secrets (`AIEA_SMOKE_EMAIL` / `AIEA_SMOKE_PASSWORD`). Never Will’s (or any personal) account.
 
 - Identity DB must be configured (`AIEA_DATABASE_URL` or `AIEA_TURSO_*`) and contain the verify user.
 - Vercel Deployment Protection (SSO) can sit in front of the app auth on Preview.

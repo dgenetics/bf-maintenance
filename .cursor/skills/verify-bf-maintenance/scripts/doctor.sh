@@ -2,7 +2,7 @@
 # Instance health: is this bf-maintenance worth driving?
 # Checks process/port, auth, and identity — not merely compile.
 # Usage: doctor.sh [base-url]
-# Env: BF_AUTH_EMAIL, BF_AUTH_PASSWORD (required), VERIFY_BASE_URL / SMOKE_BASE_URL
+# Env: AIEA_SMOKE_EMAIL, AIEA_SMOKE_PASSWORD (required), VERIFY_BASE_URL / SMOKE_BASE_URL
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck disable=SC1091
@@ -10,8 +10,8 @@ source "$SCRIPT_DIR/lib.sh"
 load_env
 
 BASE="${1:-$(default_base_url)}"
-EMAIL="${BF_AUTH_EMAIL:-}"
-PASSWORD="${BF_AUTH_PASSWORD:-}"
+EMAIL="${AIEA_SMOKE_EMAIL:-}"
+PASSWORD="${AIEA_SMOKE_PASSWORD:-}"
 PKG_VERSION=$(node -p "require('$REPO_ROOT/package.json').version" 2>/dev/null || echo unknown)
 SHA=$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)
 
@@ -29,7 +29,7 @@ if ! grep -qiE 'Beausoleil|Maintenance|Sign in|Checking access|Get started' /tmp
 fi
 
 # 2) Auth — wrong password rejected
-[[ -n "$EMAIL" && -n "$PASSWORD" ]] || { echo "FAIL: BF_AUTH_EMAIL and BF_AUTH_PASSWORD not set"; exit 2; }
+[[ -n "$EMAIL" && -n "$PASSWORD" ]] || { echo "FAIL: AIEA_SMOKE_EMAIL and AIEA_SMOKE_PASSWORD not set"; exit 2; }
 bad=$(curl -s -o /tmp/bf-doctor-bad.json -w '%{http_code}' --max-time 10 \
   -X POST "$BASE/api/auth/login" \
   -H 'content-type: application/json' \

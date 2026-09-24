@@ -13,7 +13,14 @@ Beausoleil Farm **date/schedule** maintenance app (systems, components, schedule
 
 Evidence root (survives cleanup): `.cursor/skills/verify-bf-maintenance/evidence/<run-id>/`
 
-Default live target: `https://bf-maintenance.vercel.app` (credentials from `BF_AUTH_EMAIL` / `BF_AUTH_PASSWORD` (AiEA-same identity)). Prefer an agent-owned local instance on port **3100** when mutating data.
+Default live target: `https://bf-maintenance.vercel.app`.
+
+**Auth (required for live / CI):** dedicated AiEA smoke user via repo secrets
+`AIEA_SMOKE_EMAIL` + `AIEA_SMOKE_PASSWORD` (same User row as AiEA Turso).
+**Never use Will’s personal account** (or any human login) for verify / fleet browser smokes.
+Local `--local` may fall back to a disposable seeded identity (`verify@beausoleil.test`) only when those secrets are unset.
+
+Prefer an agent-owned local instance on port **3100** when mutating data.
 
 ## Launch
 
@@ -33,7 +40,7 @@ Or point at live / already-running:
 
 ```bash
 export VERIFY_BASE_URL=https://bf-maintenance.vercel.app
-export BF_AUTH_EMAIL BF_AUTH_PASSWORD   # from .env or secrets
+export AIEA_SMOKE_EMAIL AIEA_SMOKE_PASSWORD   # from .env or secrets
 ```
 
 Teardown: `./.cursor/skills/verify-bf-maintenance/scripts/cleanup.sh [run-id]` — kills only the PID in that run’s `server.pid`. Never deletes `evidence/`.
@@ -43,7 +50,7 @@ Teardown: `./.cursor/skills/verify-bf-maintenance/scripts/cleanup.sh [run-id]` �
 Instance health (port, auth, data plane) — **not** a compile-only gate:
 
 ```bash
-VERIFY_BASE_URL=… BF_AUTH_EMAIL=… BF_AUTH_PASSWORD=… \
+VERIFY_BASE_URL=… AIEA_SMOKE_EMAIL=… AIEA_SMOKE_PASSWORD=… \
   ./.cursor/skills/verify-bf-maintenance/scripts/doctor.sh
 ```
 
@@ -114,7 +121,7 @@ All under `.cursor/skills/verify-bf-maintenance/scripts/`:
 
 ```bash
 # against live
-BF_AUTH_EMAIL=… BF_AUTH_PASSWORD=… VERIFY_BASE_URL=https://bf-maintenance.vercel.app \
+AIEA_SMOKE_EMAIL=… AIEA_SMOKE_PASSWORD=… VERIFY_BASE_URL=https://bf-maintenance.vercel.app \
   ./.cursor/skills/verify-bf-maintenance/scripts/gate.sh --feature account-login
 
 # local agent instance
@@ -124,3 +131,14 @@ BF_AUTH_EMAIL=… BF_AUTH_PASSWORD=… VERIFY_BASE_URL=https://bf-maintenance.ve
 ## Feature map
 
 Index: `features/README.md`. Keep honest with `/maintain-verification-skill` when routes or auth change.
+
+
+## CI secrets (smoke user)
+
+| Secret | Required? | Purpose |
+|--------|-----------|---------|
+| `AIEA_SMOKE_EMAIL` | Yes (live/CI) | Dedicated smoke User email in AiEA identity DB |
+| `AIEA_SMOKE_PASSWORD` | Yes (live/CI) | Matching password — set via `gh secret set`, never commit |
+| `BF_SESSION_SECRET` | Yes (local launch) | Session HMAC for agent-owned instance |
+
+Do **not** put personal credentials in Actions secrets. Vercel does **not** need these smoke vars (they are client-side CI secrets, not app runtime).
