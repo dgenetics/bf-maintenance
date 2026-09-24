@@ -78,6 +78,8 @@ export type CompleteTaskResult = {
   task: TaskJson;
   schedule: ScheduleJson | null;
   nextTask: TaskJson | null;
+  /** Set when a linked AiEA sync failed (the BF change is kept). */
+  aieaSyncError?: string | null;
 };
 
 export const maintenanceApi = {

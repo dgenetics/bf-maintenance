@@ -75,8 +75,9 @@ export function MaintenanceArchive() {
   async function handleReopen(task: TaskJson) {
     setBusyId(task.id);
     try {
-      await maintenanceApi.reopenTask(task.id);
+      const res = await maintenanceApi.reopenTask(task.id);
       await load();
+      if (res.aieaSyncError) setError(res.aieaSyncError);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Reopen failed");
     } finally {

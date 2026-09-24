@@ -73,13 +73,14 @@ export async function PATCH(req: Request, ctx: Ctx) {
     if (!result) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    if (!result.alreadyComplete) {
-      await notifyAieaComplete(id);
-    }
+    const aieaSyncError = result.alreadyComplete
+      ? null
+      : await notifyAieaComplete(id);
     return NextResponse.json({
       task: result.task,
       schedule: result.schedule,
       nextTask: result.nextTask,
+      aieaSyncError,
     });
   }
 
@@ -104,14 +105,15 @@ export async function PATCH(req: Request, ctx: Ctx) {
       if (!result) {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
       }
-      if (!result.alreadyOpen) {
-        await notifyAieaReopen(id);
-      }
+      const aieaSyncError = result.alreadyOpen
+        ? null
+        : await notifyAieaReopen(id);
       return NextResponse.json({
         task: result.task,
         schedule: null,
         nextTask: null,
         deletedNextTaskId: result.deletedNextTaskId,
+        aieaSyncError,
       });
     }
   }

@@ -67,8 +67,9 @@ export function Maintenance() {
   async function handleComplete(task: TaskJson) {
     setBusyId(task.id);
     try {
-      await maintenanceApi.completeTask(task.id);
+      const res = await maintenanceApi.completeTask(task.id);
       await load();
+      if (res.aieaSyncError) setError(res.aieaSyncError);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Complete failed");
     } finally {
@@ -79,8 +80,9 @@ export function Maintenance() {
   async function handleReopen(task: TaskJson) {
     setBusyId(task.id);
     try {
-      await maintenanceApi.reopenTask(task.id);
+      const res = await maintenanceApi.reopenTask(task.id);
       await load();
+      if (res.aieaSyncError) setError(res.aieaSyncError);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Reopen failed");
     } finally {

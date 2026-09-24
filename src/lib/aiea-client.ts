@@ -30,10 +30,10 @@ export function getAieaConfig(): {
 async function postAiea(
   path: string,
   body: { bfTaskId: string },
-): Promise<{ ok: boolean; error?: string; status?: number }> {
+): Promise<{ ok: boolean; error?: string; status?: number; skipped?: boolean }> {
   const cfg = getAieaConfig();
   if (!cfg.configured || !cfg.baseUrl) {
-    return { ok: false, error: "AIEA_URL or BF_INTEGRATION_SECRET not set" };
+    return { ok: false, skipped: true, error: "AIEA_URL or BF_INTEGRATION_SECRET not set" };
   }
   const secret = integrationSecret()!;
 
@@ -77,24 +77,33 @@ async function postAiea(
   return { ok: true, status: res.status };
 }
 
-/** Best-effort: close linked AiEA task after BF complete. */
-export async function notifyAieaComplete(bfTaskId: string): Promise<void> {
+const AIEA_SYNC_ERROR = "Couldn't sync to AiEA — try again.";
+
+/**
+ * Best-effort: close linked AiEA task after BF complete.
+ * Returns a user-facing error if a configured sync failed (BF change stays).
+ */
+export async function notifyAieaComplete(bfTaskId: string): Promise<string | null> {
   const result = await postAiea(
     "/api/integrations/bf-maintenance/complete",
     { bfTaskId },
   );
   if (!result.ok) {
     console.warn("AiEA complete sync failed:", result.error);
+    return result.skipped ? null : AIEA_SYNC_ERROR;
   }
+  return null;
 }
 
-/** Best-effort: reopen linked AiEA task after BF reopen. */
-export async function notifyAieaReopen(bfTaskId: string): Promise<void> {
+/** Best-effort: reopen linked AiEA task after BF reopen. Same return contract. */
+export async function notifyAieaReopen(bfTaskId: string): Promise<string | null> {
   const result = await postAiea(
     "/api/integrations/bf-maintenance/reopen",
     { bfTaskId },
   );
   if (!result.ok) {
     console.warn("AiEA reopen sync failed:", result.error);
+    return result.skipped ? null : AIEA_SYNC_ERROR;
   }
+  return null;
 }
