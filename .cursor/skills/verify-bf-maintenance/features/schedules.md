@@ -14,6 +14,7 @@ Schedules attach recurring (or one-shot) maintenance plans to a component: name,
 - Bottom nav → Schedules (`/schedules`).
 - Systems → open a system → open a component → Maintenance schedules.
 - Deep link `/assets/:systemId/components/:componentId`.
+- Systems → open a system → part-row **calendar** icon opens centered **Add schedule** modal pre-scoped to that component.
 
 ## Driving it with Playwright
 

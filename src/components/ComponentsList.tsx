@@ -13,10 +13,13 @@ import {
 import { useData } from '../context/DataContext'
 import type { SystemComponent, SystemComponentInput } from '../types'
 import { emptyComponentInput, formatMoney, parseMoney } from '../lib/utils'
+import { maintenanceApi, type CreateScheduleInput } from '../lib/api'
 import {
   hasOtherSystemsToMoveTo,
   MoveComponentSheet,
 } from './MoveComponentSheet'
+import { ScheduleForm } from './maintenance/ScheduleForm'
+import { Modal } from './Modal'
 import { Button, Card, Field, Input, Textarea } from './ui'
 
 function moneyToInput(value: number | null): string {
@@ -402,6 +405,9 @@ export function ComponentsList({
   const { assets } = useData()
   const hasOtherSystems = hasOtherSystemsToMoveTo(assets, systemId)
   const [movePart, setMovePart] = useState<SystemComponent | null>(null)
+  const [schedulePart, setSchedulePart] = useState<SystemComponent | null>(null)
+  const [scheduleSaving, setScheduleSaving] = useState(false)
+  const [scheduleError, setScheduleError] = useState<string | null>(null)
   const partRowRefs = useRef<Record<string, HTMLLIElement | null>>({})
 
   // Auto-expand + scroll to ?part= on mount / when the query changes
@@ -424,11 +430,6 @@ export function ComponentsList({
     if (partId) next.set('part', partId)
     else next.delete('part')
     setSearchParams(next, { replace: true })
-  }
-
-  function expandPart(partId: string) {
-    setExpandedId(partId)
-    setPartParam(partId)
   }
 
   function togglePart(partId: string) {
@@ -565,17 +566,12 @@ export function ComponentsList({
                   <button
                     type="button"
                     className="mt-0.5 text-muted hover:text-forest-800"
-                    title="View component"
-                    aria-label={`View ${displayName}`}
+                    title="Add schedule"
+                    aria-label={`Add schedule for ${displayName}`}
                     onClick={(e) => {
                       e.stopPropagation()
-                      expandPart(part.id)
-                      window.setTimeout(() => {
-                        partRowRefs.current[part.id]?.scrollIntoView({
-                          behavior: 'smooth',
-                          block: 'nearest',
-                        })
-                      }, 50)
+                      setScheduleError(null)
+                      setSchedulePart(part)
                     }}
                   >
                     <CalendarClock className="h-4 w-4" />
@@ -652,6 +648,55 @@ export function ComponentsList({
             })
           }}
         />
+      )}
+
+      {schedulePart && (
+        <Modal
+          title="Add schedule"
+          onClose={() => {
+            if (scheduleSaving) return
+            setSchedulePart(null)
+            setScheduleError(null)
+          }}
+        >
+          <div className="space-y-4">
+            <p className="text-xs text-muted">
+              {liveNames[schedulePart.id] ?? schedulePart.name}
+            </p>
+            {scheduleError && (
+              <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">
+                {scheduleError}
+              </p>
+            )}
+            <ScheduleForm
+              key={schedulePart.id}
+              formId="system-part-schedule-add-form"
+              componentId={schedulePart.id}
+              busy={scheduleSaving}
+              embedActions
+              onCancel={() => {
+                if (scheduleSaving) return
+                setSchedulePart(null)
+                setScheduleError(null)
+              }}
+              onSubmit={async (input: CreateScheduleInput) => {
+                setScheduleSaving(true)
+                setScheduleError(null)
+                try {
+                  await maintenanceApi.createSchedule(input)
+                  await maintenanceApi.suggestTasks(schedulePart.id)
+                  setSchedulePart(null)
+                } catch (e) {
+                  setScheduleError(
+                    e instanceof Error ? e.message : 'Failed to save schedule',
+                  )
+                } finally {
+                  setScheduleSaving(false)
+                }
+              }}
+            />
+          </div>
+        </Modal>
       )}
     </>
   )
