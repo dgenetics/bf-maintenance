@@ -58,12 +58,19 @@ export function Layout() {
   const mainRef = useRef<HTMLElement>(null)
 
   function scrollMainToTop() {
-    mainRef.current?.scrollTo({ top: 0, behavior: 'auto' })
+    const main = mainRef.current
+    if (main) {
+      main.scrollTop = 0
+      main.scrollTo({ top: 0, behavior: 'auto' })
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col overflow-x-hidden bg-cream-50 shadow-sm sm:border-x sm:border-cream-200">
-      <header className="sticky top-0 z-20 border-b border-cream-200 bg-forest-900 text-cream-50">
+    <div className="mx-auto flex h-dvh max-h-dvh w-full max-w-3xl flex-col overflow-x-hidden overflow-y-hidden bg-cream-50 shadow-sm sm:border-x sm:border-cream-200">
+      <header className="shrink-0 z-20 border-b border-cream-200 bg-forest-900 text-cream-50">
         <div className="flex items-center justify-between px-4 py-3">
           <div>
             <p className="text-[10px] font-semibold tracking-[0.18em] text-cream-300 uppercase">
@@ -79,7 +86,7 @@ export function Layout() {
 
       <main
         ref={mainRef}
-        className="flex-1 overflow-x-hidden overflow-y-auto px-4 pt-4 pb-[calc(3.75rem+1.5rem+max(0.75rem,env(safe-area-inset-bottom,0px)))]"
+        className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pt-4 pb-[calc(3.75rem+1.5rem+max(0.75rem,env(safe-area-inset-bottom,0px)))]"
       >
         <Outlet />
       </main>
