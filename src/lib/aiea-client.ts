@@ -61,18 +61,16 @@ async function postAiea(
   }
 
   if (!res.ok) {
-    let detail = res.statusText;
-    try {
-      const json = (await res.json()) as { error?: string };
-      if (json.error) detail = typeof json.error === "string" ? json.error : JSON.stringify(json.error);
-    } catch {
-      /* ignore */
-    }
+    const text = await res.text().catch(() => "");
     // 404 = no linked AiEA task — not an error for unlinked BF chores
-    if (res.status === 404) {
+    if (res.status === 404 && /task not found/i.test(text)) {
       return { ok: true, status: 404 };
     }
-    return { ok: false, error: `${res.status}: ${detail}`, status: res.status };
+    return {
+      ok: false,
+      error: `${res.status} ${res.statusText}: ${text.slice(0, 500) || "(empty body)"}`,
+      status: res.status,
+    };
   }
   return { ok: true, status: res.status };
 }
