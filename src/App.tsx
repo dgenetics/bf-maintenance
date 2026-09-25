@@ -30,14 +30,8 @@ function LoadingShell({ onSignedOut }: { onSignedOut: () => void }) {
         <p className="text-sm font-medium text-ink">Could not load data</p>
         <p className="max-w-sm text-xs text-muted">{error}</p>
         <p className="max-w-sm text-xs text-muted">
-          Use the app at{" "}
-          <a
-            className="underline"
-            href="https://bf-maintenance.vercel.app"
-          >
-            bf-maintenance.vercel.app
-          </a>{" "}
-          or run <code className="rounded bg-cream-200 px-1">npm run dev</code>{" "}
+          Retry below, or open this same origin in a browser tab. For local
+          dev run <code className="rounded bg-cream-200 px-1">npm run dev</code>{" "}
           in BF-Maintenance (often http://localhost:3001 if 3000 is taken).
         </p>
         <button
