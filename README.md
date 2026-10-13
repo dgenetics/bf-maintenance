@@ -42,11 +42,10 @@ Provisioned via Vercel Marketplace as **`bf-maintenance-db`** (project-linked). 
 |-----|---------|
 | `TURSO_DATABASE_URL` | libSQL URL (from Marketplace resource) |
 | `TURSO_AUTH_TOKEN` | DB token (from Marketplace resource) |
-| `BF_SESSION_SECRET` | Session HMAC secret (required) |
-| `AIEA_TURSO_DATABASE_URL` / `AIEA_TURSO_AUTH_TOKEN` | AiEA identity DB (same User table as AiEA) |
-| `AIEA_DATABASE_URL` | Local/file identity DB (verify or shared AiEA sqlite) |
+| `AIEA_URL` | AiEA origin. Session checks call `GET /api/session` there; task sync posts there too |
+| `BF_INTEGRATION_SECRET` | Shared Bearer / X-BF-Integration-Key (task sync only, not user sessions) |
 
-BF app data stays on BF’s own Turso (`TURSO_*`). Account login reads AiEA’s User rows via `AIEA_*` — do **not** point BF `TURSO_*` at AiEA.
+BF app data stays on BF’s own Turso (`TURSO_*`). Sign-in is AiEA’s `aiea_session` cookie. This app does not read AiEA’s User table and does not issue its own session.
 
 ```bash
 vercel env pull .env.vercel --environment=production --yes
@@ -90,7 +89,7 @@ Once enabled, PRs and pushes to `main` run:
 2. Local Next server via the verify skill `gate.sh --local`
 3. Instance **doctor** + Playwright **account-login** drive
 
-**Optional secrets:** `BF_AUTH_EMAIL` / `BF_AUTH_PASSWORD` / `BF_SESSION_SECRET` — local `--local` gate seeds a disposable AiEA-shaped identity DB with defaults when unset.
+Local `--local` puts a same-origin stand-in in front of this app for AiEA’s `POST /api/auth/login` and `GET /api/session`. It uses `AIEA_SMOKE_EMAIL` / `AIEA_SMOKE_PASSWORD` (defaults only when those are unset). Production calls the real AiEA origin.
 
 Evidence lands in the workflow artifact `verify-evidence-<run_id>`.
 

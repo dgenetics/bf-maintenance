@@ -20,7 +20,6 @@ source "$SCRIPT_DIR/lib.sh"
 load_env
 export AIEA_SMOKE_EMAIL="${AIEA_SMOKE_EMAIL:-verify@beausoleil.test}"
 export AIEA_SMOKE_PASSWORD="${AIEA_SMOKE_PASSWORD:-verify-pass-1234}"
-export BF_SESSION_SECRET="${BF_SESSION_SECRET:-verify-session-secret-change-me}"
 
 LOCAL=0
 CLEANUP=0

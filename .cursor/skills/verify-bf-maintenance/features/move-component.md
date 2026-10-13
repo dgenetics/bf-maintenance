@@ -31,4 +31,4 @@ Preconditions:
 - Menu item is disabled when only one system exists (`No other systems to move to.`).
 - Schedules/tasks hang on `componentId` — no reparent required.
 - Primary entry is the system page part row; ComponentDetail ⋯ remains for calendar deep-links.
-- Drive logs in via `POST /api/auth/login` before seeding so `page.request` carries the session cookie.
+- Drive signs in through the AiEA login form first so later fetches send `aiea_session`.

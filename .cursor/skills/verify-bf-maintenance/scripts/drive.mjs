@@ -110,11 +110,16 @@ async function unlock(page, creds) {
 
 async function driveAccountLogin(page, out, creds) {
   const steps = [];
-  await page.goto(mounted("/"), { waitUntil: "networkidle" });
+  await page.goto(mounted("/schedules"), { waitUntil: "networkidle" });
   await page.getByRole("heading", { level: 1, name: "Sign in", exact: true }).waitFor();
+  const lockedUrl = page.url();
+  const decoded = decodeURIComponent(lockedUrl);
+  if (!lockedUrl.includes("/login?") || !decoded.includes("/maintenance/schedules")) {
+    throw new Error(`expected /login?next=/maintenance/schedules, got ${lockedUrl}`);
+  }
   await screenshot(page, join(out, "account-login-locked.png"));
   await ariaDump(page, join(out, "account-login-locked.aria.txt"));
-  steps.push("locked: heading Sign in visible");
+  steps.push(`signed out: ${lockedUrl}`);
 
   await page.getByLabel("Email").fill("wrong@example.com");
   await page.getByLabel("Password").fill("__wrong__");
@@ -126,13 +131,36 @@ async function driveAccountLogin(page, out, creds) {
   await page.getByLabel("Email").fill(creds.email);
   await page.getByLabel("Password").fill(creds.password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.getByRole("heading", { level: 2, name: "Systems", exact: true }).waitFor({
+  await page.getByRole("heading", { level: 2, name: "Schedules", exact: true }).waitFor({
     timeout: 20000,
   });
   await page.getByText("Beausoleil Farm").first().waitFor();
+  const backUrl = page.url();
+  if (!backUrl.includes("/schedules") || backUrl.includes("/login")) {
+    throw new Error(`login did not return to schedules (${backUrl})`);
+  }
+  await page
+    .getByRole("navigation", { name: "Farm Manager" })
+    .getByRole("link", { name: "Account" })
+    .waitFor({ timeout: 10000 });
+  if (await page.getByLabel("Email").count()) {
+    throw new Error("maintenance UI still shows a sign-in form");
+  }
   await screenshot(page, join(out, "account-login-unlocked.png"));
   await ariaDump(page, join(out, "account-login-unlocked.aria.txt"));
-  steps.push("right creds: Systems heading + Beausoleil Farm chrome");
+  steps.push("right creds: back on Schedules, Farm Manager bar shows Account");
+
+  await page.getByRole("button", { name: "More" }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
+  await page.getByRole("heading", { level: 1, name: "Sign in", exact: true }).waitFor({
+    timeout: 10000,
+  });
+  const signedOutUrl = page.url();
+  if (!signedOutUrl.includes("/login")) {
+    throw new Error(`sign out did not land on /login (${signedOutUrl})`);
+  }
+  await screenshot(page, join(out, "account-login-signed-out.png"));
+  steps.push(`sign out landed on ${signedOutUrl}`);
   return steps;
 }
 

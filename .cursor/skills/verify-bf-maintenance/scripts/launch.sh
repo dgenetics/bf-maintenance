@@ -21,7 +21,7 @@ fi
 cd "$REPO_ROOT"
 if [[ ! -f .env ]]; then
   cp .env.example .env
-  echo "copied .env.example → .env (set BF_SESSION_SECRET + identity DB before driving)" >&2
+  echo "copied .env.example → .env" >&2
 fi
 if [[ ! -d node_modules ]]; then
   npm ci
@@ -43,21 +43,23 @@ if [[ ! -f "$VERIFY_DB" ]]; then
   fi
 fi
 
-# Seed AiEA-shaped identity DB for account login (local/CI).
-IDENTITY_DB="$OUT/aiea-identity.db"
+# Same-origin stand-in for AiEA login + GET /api/session. bf itself listens on PORT+1.
+BF_PORT=$((PORT + 1))
+if curl -s -o /dev/null --max-time 1 "http://127.0.0.1:${BF_PORT}/" 2>/dev/null; then
+  echo "port $BF_PORT already answering — refusing to hijack" >&2
+  exit 3
+fi
 export AIEA_SMOKE_EMAIL="${AIEA_SMOKE_EMAIL:-verify@beausoleil.test}"
 export AIEA_SMOKE_PASSWORD="${AIEA_SMOKE_PASSWORD:-verify-pass-1234}"
-export BF_SESSION_SECRET="${BF_SESSION_SECRET:-verify-session-secret-change-me}"
-node "$REPO_ROOT/scripts/seed-identity-db.mjs" "$IDENTITY_DB" \
-  "$AIEA_SMOKE_EMAIL" "$AIEA_SMOKE_PASSWORD" "Verify User"
 
 nohup env DATABASE_URL="file:$VERIFY_DB" \
-  AIEA_DATABASE_URL="file:$IDENTITY_DB" \
-  BF_SESSION_SECRET="$BF_SESSION_SECRET" \
   AIEA_SMOKE_EMAIL="$AIEA_SMOKE_EMAIL" \
   AIEA_SMOKE_PASSWORD="$AIEA_SMOKE_PASSWORD" \
-  PORT="$PORT" \
-  npm run start -- -p "$PORT" -H 127.0.0.1 \
+  BF_INTEGRATION_SECRET="${BF_INTEGRATION_SECRET:-}" \
+  node "$SCRIPT_DIR/farm-door.mjs" \
+    --public-port "$PORT" \
+    --bf-port "$BF_PORT" \
+    --bf-pidfile "$OUT/bf.pid" \
   >"$OUT/server.txt" 2>&1 &
 echo $! >"$OUT/server.pid"
 echo "$BASE" >"$OUT/server.url"
@@ -66,7 +68,7 @@ echo "$RUN_ID" >"$OUT/../.last-run-id"
 ready=0
 for _ in $(seq 1 60); do
   code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 2 "$BASE/maintenance" || true)
-  if [[ "$code" == "200" ]]; then
+  if [[ "$code" == "200" || "$code" == "302" || "$code" == "307" ]]; then
     ready=1
     break
   fi

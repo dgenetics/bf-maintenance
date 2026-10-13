@@ -4,8 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { DataProvider, useData } from "./context/DataContext";
 import { Layout } from "./components/Layout";
-import { AuthGate } from "./components/AuthGate";
-import { BASE_PATH, withBase } from "./lib/base-path";
+import { BASE_PATH, loginHref, withBase } from "./lib/base-path";
 import { cleanupLegacyClient } from "./lib/cleanup-legacy";
 import { AssetList } from "./views/AssetList";
 import { AssetDetail } from "./views/AssetDetail";
@@ -16,7 +15,7 @@ import { Schedules } from "./views/Schedules";
 
 const SW_RELOAD_KEY = "bf-sw-cleaned";
 
-function LoadingShell({ onSignedOut }: { onSignedOut: () => void }) {
+function LoadingShell() {
   const { loading, error, refresh } = useData();
   if (loading) {
     return (
@@ -53,7 +52,7 @@ function LoadingShell({ onSignedOut }: { onSignedOut: () => void }) {
   }
   return (
     <Routes>
-      <Route element={<Layout onSignedOut={onSignedOut} />}>
+      <Route element={<Layout />}>
         <Route index element={<AssetList />} />
         <Route path="maintenance" element={<Maintenance />} />
         <Route path="maintenance/archive" element={<MaintenanceArchive />} />
@@ -74,7 +73,7 @@ function LoadingShell({ onSignedOut }: { onSignedOut: () => void }) {
 export default function App() {
   const [ready, setReady] = useState(false);
   const [authState, setAuthState] = useState<
-    "checking" | "locked" | "unlocked"
+    "checking" | "unavailable" | "unlocked"
   >("checking");
 
   // Kill old Vite PWA SW once, then hard-reload so /api isn't intercepted
@@ -101,10 +100,27 @@ export default function App() {
 
   const checkAuth = useCallback(async () => {
     try {
-      const res = await fetch(withBase("/api/auth/me"), { credentials: "include" });
-      setAuthState(res.ok ? "unlocked" : "locked");
+      const res = await fetch(withBase("/api/auth/me"), {
+        credentials: "include",
+      });
+      if (res.status === 503) {
+        setAuthState("unavailable");
+        return;
+      }
+      if (!res.ok) {
+        window.location.assign(loginHref());
+        return;
+      }
+      const data = (await res.json().catch(() => ({}))) as {
+        authenticated?: boolean;
+      };
+      if (data.authenticated === false) {
+        window.location.assign(loginHref());
+        return;
+      }
+      setAuthState("unlocked");
     } catch {
-      setAuthState("locked");
+      setAuthState("unavailable");
     }
   }, []);
 
@@ -121,16 +137,28 @@ export default function App() {
     );
   }
 
-  if (authState === "locked") {
+  if (authState === "unavailable") {
     return (
-      <AuthGate onSuccess={() => setAuthState("unlocked")} />
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-cream-100 px-4 text-center">
+        <h1 className="text-lg font-semibold text-ink">Can&apos;t verify sign-in</h1>
+        <p className="max-w-sm text-sm text-muted">
+          AiEA didn&apos;t answer the session check. Wait a moment and try again.
+        </p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="rounded-xl bg-forest-900 px-4 py-2 text-sm text-cream-50"
+        >
+          Retry
+        </button>
+      </div>
     );
   }
 
   return (
     <DataProvider>
       <BrowserRouter basename={BASE_PATH}>
-        <LoadingShell onSignedOut={() => setAuthState("locked")} />
+        <LoadingShell />
       </BrowserRouter>
     </DataProvider>
   );

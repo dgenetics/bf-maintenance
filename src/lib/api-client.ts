@@ -5,7 +5,7 @@ import type {
   SystemComponentInput,
   SystemComponentPatch,
 } from "@/types";
-import { withBase } from "@/lib/base-path";
+import { loginHref, withBase } from "@/lib/base-path";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
@@ -26,7 +26,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!res.ok) {
     if (res.status === 401 && typeof window !== "undefined") {
-      window.location.assign(withBase("/"));
+      window.location.assign(loginHref());
       throw new Error("Session expired — sign in again");
     }
     let message = res.statusText;
