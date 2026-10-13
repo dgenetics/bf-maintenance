@@ -60,6 +60,26 @@ PY
 check_login_redirect "/maintenance"
 check_login_redirect "/maintenance/schedules"
 
+# A leftover bf_session is cleared on the first response and does not authenticate.
+legacy_headers=$(mktemp)
+legacy=$(curl -s -D "$legacy_headers" -o /dev/null -w '%{http_code}' --max-time 10 \
+  -H 'cookie: bf_session=stale' "$MOUNT" || echo "000")
+echo "GET /maintenance with stale bf_session -> $legacy"
+[[ "$legacy" == "302" || "$legacy" == "307" ]] || { echo "FAIL: stale bf_session should still redirect"; rm -f "$legacy_headers"; exit 1; }
+if ! grep -qi '^set-cookie: bf_session=;' "$legacy_headers"; then
+  echo "FAIL: stale bf_session was not cleared"
+  cat "$legacy_headers"
+  rm -f "$legacy_headers"
+  exit 1
+fi
+if ! grep -qi '^set-cookie: bf_session=;.*[Mm]ax-[Aa]ge=0' "$legacy_headers"; then
+  echo "FAIL: bf_session clear cookie missing Max-Age=0"
+  cat "$legacy_headers"
+  rm -f "$legacy_headers"
+  exit 1
+fi
+rm -f "$legacy_headers"
+
 # Host root redirects onto the mount (bookmarks / installed app).
 root_headers=$(mktemp)
 root_code=$(curl -s -D "$root_headers" -o /dev/null -w '%{http_code}' --max-time 10 "$BASE/" || echo "000")

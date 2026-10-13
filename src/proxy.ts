@@ -7,11 +7,20 @@ import { BASE_PATH } from "@/lib/base-path";
 import { loginRedirectUrl } from "@/lib/login-redirect";
 
 function isApiPath(pathname: string): boolean {
-  return (
-    pathname === "/api" ||
-    pathname.startsWith("/api/") ||
-    pathname.includes("/api/")
-  );
+  return pathname === "/api" || pathname.startsWith("/api/");
+}
+
+/** Drop a leftover bf_session once. Later requests no longer send it. */
+function clearLegacySession(response: NextResponse, request: NextRequest): NextResponse {
+  if (!request.cookies.get("bf_session")) return response;
+  response.cookies.set("bf_session", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+  return response;
 }
 
 function isStaticPath(pathname: string): boolean {
@@ -38,10 +47,10 @@ function redirectToLogin(request: NextRequest): NextResponse {
   });
   const res = NextResponse.redirect(location, 302);
   res.headers.set("cache-control", "no-store");
-  return res;
+  return clearLegacySession(res, request);
 }
 
-function cantVerify(): NextResponse {
+function cantVerify(request: NextRequest): NextResponse {
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -57,19 +66,22 @@ function cantVerify(): NextResponse {
   </main>
 </body>
 </html>`;
-  return new NextResponse(html, {
-    status: 503,
-    headers: {
-      "content-type": "text/html; charset=utf-8",
-      "cache-control": "no-store",
-    },
-  });
+  return clearLegacySession(
+    new NextResponse(html, {
+      status: 503,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-store",
+      },
+    }),
+    request,
+  );
 }
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (isApiPath(pathname) || isStaticPath(pathname)) {
-    return NextResponse.next();
+    return clearLegacySession(NextResponse.next(), request);
   }
 
   const token = request.cookies.get("aiea_session")?.value;
@@ -78,12 +90,12 @@ export async function proxy(request: NextRequest) {
   try {
     const user = await verifyAieaSession(token);
     if (!user) return redirectToLogin(request);
-    return NextResponse.next();
+    return clearLegacySession(NextResponse.next(), request);
   } catch (err) {
     if (!(err instanceof SessionUnavailableError)) {
       console.error("session verify failed");
     }
-    return cantVerify();
+    return cantVerify(request);
   }
 }
 
