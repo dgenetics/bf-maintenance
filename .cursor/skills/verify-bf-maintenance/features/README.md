@@ -30,7 +30,7 @@ Each feature file: H1 + one paragraph, then exactly four H2s — `Sub-features`,
 
 ## Features
 
-- [Account login](./account-login.md) — sign-in / reject / session.
+- [Account login](./account-login.md) — redirect to AiEA login, reject, return, sign out.
 - [Systems list + search](./systems-list.md) — list, `?q=` sync, honest counts.
 - [Maintenance date buckets](./maintenance-buckets.md) — Overdue / Due soon / Upcoming.
 - [Completed archive](./archive.md) — history + filters.

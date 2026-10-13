@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { SiteNav } from "@/components/site-nav";
 import { BASE_PATH } from "@/lib/base-path";
 import "./globals.css";
@@ -36,7 +37,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <SiteNav zone="maintenance" />
+        <Suspense
+          fallback={
+            <div
+              className="min-h-10 bg-[#12141c] safe-top"
+              aria-hidden="true"
+            />
+          }
+        >
+          <SiteNav zone="maintenance" />
+        </Suspense>
         {children}
       </body>
     </html>

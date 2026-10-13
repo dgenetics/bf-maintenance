@@ -30,9 +30,10 @@ fi
 
 if [[ -n "$RUN_ID" ]]; then
   stop_pidfile "$EVIDENCE_ROOT/$RUN_ID/server.pid"
+  stop_pidfile "$EVIDENCE_ROOT/$RUN_ID/bf.pid"
 else
   shopt -s nullglob
-  for f in "$EVIDENCE_ROOT"/*/server.pid; do
+  for f in "$EVIDENCE_ROOT"/*/server.pid "$EVIDENCE_ROOT"/*/bf.pid; do
     stop_pidfile "$f"
   done
 fi

@@ -16,9 +16,13 @@ Evidence root (survives cleanup): `.cursor/skills/verify-bf-maintenance/evidence
 Default live target: `https://bf-maintenance.vercel.app`.
 
 **Auth (required for live / CI):** dedicated AiEA smoke user via repo secrets
-`AIEA_SMOKE_EMAIL` + `AIEA_SMOKE_PASSWORD` (same User row as AiEA Turso).
+`AIEA_SMOKE_EMAIL` + `AIEA_SMOKE_PASSWORD`.
 **Never use Will’s personal account** (or any human login) for verify / fleet browser smokes.
-Local `--local` may fall back to a disposable seeded identity (`verify@beausoleil.test`) only when those secrets are unset.
+Local `--local` signs that user in through a same-origin stand-in for AiEA
+(`POST /api/auth/login`, `GET /api/session`) and falls back to
+`verify@beausoleil.test` only when those secrets are unset.
+bf does not have its own login or session cookie. Signed-out pages redirect to
+`/login?next=/maintenance/...`.
 
 Prefer an agent-owned local instance on port **3100** when mutating data.
 
@@ -43,7 +47,7 @@ export VERIFY_BASE_URL=https://bf-maintenance.vercel.app
 export AIEA_SMOKE_EMAIL AIEA_SMOKE_PASSWORD   # from .env or secrets
 ```
 
-Teardown: `./.cursor/skills/verify-bf-maintenance/scripts/cleanup.sh [run-id]` — kills only the PID in that run’s `server.pid`. Never deletes `evidence/`.
+Teardown: `./.cursor/skills/verify-bf-maintenance/scripts/cleanup.sh [run-id]` — kills only the PIDs in that run’s `server.pid` and `bf.pid`. Never deletes `evidence/`.
 
 ## Doctor
 
@@ -58,11 +62,12 @@ The app is mounted at `/maintenance` (`basePath`). `VERIFY_BASE_URL` stays the o
 
 Must pass:
 
-1. `GET /` → 307/308 to `/maintenance`, and `GET /maintenance` → 200
-2. Wrong password → `401`/`403` on `POST /maintenance/api/auth/login`
-3. Correct email/password → 200 + `bf_session` cookie
-4. `GET /maintenance/api/auth/me` → authenticated
-5. `GET /maintenance/api/systems` and `GET /maintenance/api/tasks` → JSON arrays
+1. Signed out, `GET /maintenance` and `GET /maintenance/schedules` → 302 to `/login?next=<that path>`
+2. `GET /` → 307/308 to `/maintenance`
+3. Wrong password → `401`/`403` on `POST /api/auth/login` (AiEA, same origin)
+4. Correct email/password → 200 + `aiea_session` cookie
+5. `GET /maintenance/api/auth/me`, `/api/systems`, and `/api/tasks` → authenticated JSON
+6. `POST /maintenance/api/auth/login` → 404 (this app has no login)
 
 Reports `repo_sha` + `package_version`. Compile (`npm run typecheck` / `build`) may be run separately before ship; it is **not** a substitute for doctor.
 
@@ -139,8 +144,7 @@ Index: `features/README.md`. Keep honest with `/maintain-verification-skill` whe
 
 | Secret | Required? | Purpose |
 |--------|-----------|---------|
-| `AIEA_SMOKE_EMAIL` | Yes (live/CI) | Dedicated smoke User email in AiEA identity DB |
+| `AIEA_SMOKE_EMAIL` | Yes (live/CI) | Dedicated smoke user for AiEA login |
 | `AIEA_SMOKE_PASSWORD` | Yes (live/CI) | Matching password — set via `gh secret set`, never commit |
-| `BF_SESSION_SECRET` | Yes (local launch) | Session HMAC for agent-owned instance |
 
 Do **not** put personal credentials in Actions secrets. Vercel does **not** need these smoke vars (they are client-side CI secrets, not app runtime).
