@@ -53,6 +53,9 @@ jobs:
             "BF_INTEGRATION_SECRET=\"${BF_INTEGRATION_SECRET}\"" \
             > .env
 
+      - name: Check Farm Manager bar pin
+        run: bash scripts/check-site-nav.sh
+
       - name: Install app deps
         run: npm ci
 

@@ -5,6 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { DataProvider, useData } from "./context/DataContext";
 import { Layout } from "./components/Layout";
 import { AuthGate } from "./components/AuthGate";
+import { BASE_PATH, withBase } from "./lib/base-path";
 import { cleanupLegacyClient } from "./lib/cleanup-legacy";
 import { AssetList } from "./views/AssetList";
 import { AssetDetail } from "./views/AssetDetail";
@@ -33,9 +34,9 @@ function LoadingShell({ onSignedOut }: { onSignedOut: () => void }) {
           Use the app at{" "}
           <a
             className="underline"
-            href="https://bf-maintenance.vercel.app"
+            href="/maintenance"
           >
-            bf-maintenance.vercel.app
+            bf-maintenance.vercel.app/maintenance
           </a>{" "}
           or run <code className="rounded bg-cream-200 px-1">npm run dev</code>{" "}
           in BF-Maintenance (often http://localhost:3001 if 3000 is taken).
@@ -100,7 +101,7 @@ export default function App() {
 
   const checkAuth = useCallback(async () => {
     try {
-      const res = await fetch("/api/auth/me", { credentials: "include" });
+      const res = await fetch(withBase("/api/auth/me"), { credentials: "include" });
       setAuthState(res.ok ? "unlocked" : "locked");
     } catch {
       setAuthState("locked");
@@ -122,17 +123,13 @@ export default function App() {
 
   if (authState === "locked") {
     return (
-      <AuthGate
-        onSuccess={() => {
-          setAuthState("unlocked");
-        }}
-      />
+      <AuthGate onSuccess={() => setAuthState("unlocked")} />
     );
   }
 
   return (
     <DataProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={BASE_PATH}>
         <LoadingShell onSignedOut={() => setAuthState("locked")} />
       </BrowserRouter>
     </DataProvider>

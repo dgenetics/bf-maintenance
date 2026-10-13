@@ -31,7 +31,7 @@ Agent-owned local instance (do not hijack a human session on :3000):
 (cd .cursor/skills/verify-bf-maintenance/scripts && npm install)
 
 ./.cursor/skills/verify-bf-maintenance/scripts/launch.sh 3100
-# prints run-id; ready when GET http://127.0.0.1:3100/ → 200
+# prints run-id; ready when GET http://127.0.0.1:3100/maintenance → 200
 ```
 
 `launch.sh` builds if needed, copies a disposable DB under the evidence run dir, starts `next start -p 3100 -H 127.0.0.1`, writes `evidence/<run-id>/server.pid`.
@@ -54,13 +54,15 @@ VERIFY_BASE_URL=… AIEA_SMOKE_EMAIL=… AIEA_SMOKE_PASSWORD=… \
   ./.cursor/skills/verify-bf-maintenance/scripts/doctor.sh
 ```
 
+The app is mounted at `/maintenance` (`basePath`). `VERIFY_BASE_URL` stays the origin. Doctor and drive add the prefix.
+
 Must pass:
 
-1. `GET /` → 200
-2. Wrong password → `401`/`403` on `POST /api/auth/login`
+1. `GET /` → 307/308 to `/maintenance`, and `GET /maintenance` → 200
+2. Wrong password → `401`/`403` on `POST /maintenance/api/auth/login`
 3. Correct email/password → 200 + `bf_session` cookie
-4. `GET /api/auth/me` → authenticated
-5. `GET /api/systems` and `GET /api/tasks` → JSON arrays
+4. `GET /maintenance/api/auth/me` → authenticated
+5. `GET /maintenance/api/systems` and `GET /maintenance/api/tasks` → JSON arrays
 
 Reports `repo_sha` + `package_version`. Compile (`npm run typecheck` / `build`) may be run separately before ship; it is **not** a substitute for doctor.
 

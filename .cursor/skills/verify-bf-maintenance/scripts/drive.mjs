@@ -74,6 +74,21 @@ function runId() {
   );
 }
 
+/** Public mount. goto("/…") is origin-absolute and ignores a baseURL path. */
+const MOUNT = "/maintenance";
+
+function mounted(path) {
+  if (!path.startsWith("/")) return `${MOUNT}/${path}`;
+  if (path === "/") return MOUNT;
+  return `${MOUNT}${path}`;
+}
+
+function appBanner(page) {
+  return page.getByRole("banner").filter({
+    has: page.getByRole("heading", { level: 1, name: "Maintenance", exact: true }),
+  });
+}
+
 async function screenshot(page, path) {
   await page.screenshot({ path, fullPage: true });
 }
@@ -95,7 +110,7 @@ async function unlock(page, creds) {
 
 async function driveAccountLogin(page, out, creds) {
   const steps = [];
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto(mounted("/"), { waitUntil: "networkidle" });
   await page.getByRole("heading", { level: 1, name: "Sign in", exact: true }).waitFor();
   await screenshot(page, join(out, "account-login-locked.png"));
   await ariaDump(page, join(out, "account-login-locked.aria.txt"));
@@ -123,12 +138,12 @@ async function driveAccountLogin(page, out, creds) {
 
 async function driveSystemsList(page, out, creds) {
   const steps = [];
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto(mounted("/"), { waitUntil: "networkidle" });
   if (await page.getByLabel("Email").count()) {
     await unlock(page, creds);
   }
   await page.getByRole("heading", { level: 2, name: "Systems", exact: true }).waitFor();
-  const headerAdd = page.getByRole("banner").getByRole("button", { name: "Add system" });
+  const headerAdd = appBanner(page).getByRole("button", { name: "Add system" });
   await headerAdd.waitFor({ timeout: 10000 });
   steps.push("header Add system CTA visible");
   const search = page.getByLabel("Search systems");
@@ -161,12 +176,12 @@ async function driveSystemsList(page, out, creds) {
 
 async function driveMaintenanceBuckets(page, out, creds) {
   const steps = [];
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto(mounted("/"), { waitUntil: "networkidle" });
   if (await page.getByLabel("Email").count()) {
     await unlock(page, creds);
   }
   await page.getByRole("link", { name: "Chores" }).click();
-  await page.waitForURL(/\/maintenance/);
+  await page.waitForURL(/\/maintenance\/maintenance\/?(?:\?.*)?$/);
   await page.getByRole("heading", { level: 2, name: "Chores", exact: true }).waitFor();
   if (await page.getByRole("button", { name: "Suggest tasks" }).count()) {
     throw new Error("Suggest tasks button should be removed from Chores");
@@ -185,11 +200,11 @@ async function driveMaintenanceBuckets(page, out, creds) {
 
 async function driveArchive(page, out, creds) {
   const steps = [];
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto(mounted("/"), { waitUntil: "networkidle" });
   if (await page.getByLabel("Email").count()) {
     await unlock(page, creds);
   }
-  await page.goto("/maintenance/archive", { waitUntil: "networkidle" });
+  await page.goto(mounted("/maintenance/archive"), { waitUntil: "networkidle" });
   await page.getByRole("heading", { level: 2, name: "Completed archive", exact: true }).waitFor({
     timeout: 20000,
   });
@@ -201,11 +216,11 @@ async function driveArchive(page, out, creds) {
 
 async function driveStickySave(page, out, creds) {
   const steps = [];
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto(mounted("/"), { waitUntil: "networkidle" });
   if (await page.getByLabel("Email").count()) {
     await unlock(page, creds);
   }
-  await page.getByRole("banner").getByRole("button", { name: "Add system" }).click();
+  await appBanner(page).getByRole("button", { name: "Add system" }).click();
   const dialog = page.getByRole("dialog", { name: "Add system" });
   await dialog.waitFor({ timeout: 10000 });
   await dialog.getByRole("heading", { level: 2, name: "Add system", exact: true }).waitFor();
@@ -230,7 +245,7 @@ async function driveStickySave(page, out, creds) {
 
 async function driveSchedules(page, out, creds) {
   const steps = [];
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto(mounted("/"), { waitUntil: "networkidle" });
   if (await page.getByLabel("Email").count()) {
     await unlock(page, creds);
   }
@@ -241,7 +256,7 @@ async function driveSchedules(page, out, creds) {
   });
   steps.push("Schedules h2 visible");
 
-  const headerAdd = page.getByRole("banner").getByRole("button", { name: "Add schedule" });
+  const headerAdd = appBanner(page).getByRole("button", { name: "Add schedule" });
   await headerAdd.waitFor({ timeout: 10000 });
   steps.push("header Add schedule CTA visible");
   if ((await page.getByLabel("Filter by component").count()) > 0) {
@@ -276,11 +291,11 @@ async function driveSchedules(page, out, creds) {
 
 async function driveAutoMaterialize(page, out, creds) {
   const steps = [];
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto(mounted("/"), { waitUntil: "networkidle" });
   if (await page.getByLabel("Email").count()) {
     await unlock(page, creds);
   }
-  await page.goto("/maintenance", { waitUntil: "networkidle" });
+  await page.goto(mounted("/maintenance"), { waitUntil: "networkidle" });
   await page.getByRole("heading", { level: 2, name: "Chores", exact: true }).waitFor({
     timeout: 20000,
   });
@@ -313,7 +328,7 @@ async function driveAutoMaterialize(page, out, creds) {
 
 async function driveMoveComponent(page, out, creds) {
   const steps = [];
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto(mounted("/"), { waitUntil: "networkidle" });
   if (await page.getByLabel("Email").count()) {
     await unlock(page, creds);
   }
@@ -353,11 +368,11 @@ async function driveMoveComponent(page, out, creds) {
     );
   }
 
-  let systems = await api("GET", "/api/systems");
+  let systems = await api("GET", mounted("/api/systems"));
   steps.push(`systems loaded: ${systems.length}`);
 
   async function createSystem(name, category) {
-    return api("POST", "/api/systems", {
+    return api("POST", mounted("/api/systems"), {
       name,
       category,
       notes: "",
@@ -366,7 +381,7 @@ async function driveMoveComponent(page, out, creds) {
   }
 
   async function addComponent(systemId, name) {
-    return api("POST", `/api/systems/${systemId}/components`, {
+    return api("POST", mounted(`/api/systems/${systemId}/components`), {
       name,
       location: "",
       modelNumber: "",
@@ -406,7 +421,7 @@ async function driveMoveComponent(page, out, creds) {
   }
 
   // Primary entry: system (AssetDetail) page part-row ⋯ menu — not ComponentDetail.
-  await page.goto(`/assets/${source.id}`, { waitUntil: "networkidle" });
+  await page.goto(mounted(`/assets/${source.id}`), { waitUntil: "networkidle" });
   await page
     .getByRole("heading", { level: 2, name: source.name, exact: true })
     .waitFor({ timeout: 20000 });
@@ -461,7 +476,7 @@ async function driveMoveComponent(page, out, creds) {
     `stayed on /assets/${source.id}; part removed from current system list`,
   );
 
-  const after = await api("GET", "/api/systems");
+  const after = await api("GET", mounted("/api/systems"));
   const srcAfter = after.find((s) => s.id === source.id);
   const tgtAfter = after.find((s) => s.id === target.id);
   if (srcAfter?.components?.some((c) => c.id === component.id)) {
