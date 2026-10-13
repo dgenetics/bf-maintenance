@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { NavLink, Outlet, useLocation, useSearchParams } from 'react-router-dom'
 import { CalendarClock, CalendarRange, LogOut, MoreHorizontal, Plus, Wrench } from 'lucide-react'
 import { withBase } from '../lib/base-path'
@@ -105,6 +106,7 @@ function HeaderOverflowMenu({ onSignOut }: { onSignOut: () => void }) {
 }
 
 export function Layout({ onSignedOut }: { onSignedOut: () => void }) {
+  const router = useRouter()
   const { pathname } = useLocation()
   const mainRef = useRef<HTMLElement>(null)
 
@@ -129,6 +131,7 @@ export function Layout({ onSignedOut }: { onSignedOut: () => void }) {
       // Match AuthGate: flip app authState to locked so the Sign in gate
       // appears immediately (a same-URL assign would no-op on the zone root).
       onSignedOut()
+      router.refresh()
     }
   }
 

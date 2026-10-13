@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { SiteNav } from "@/components/site-nav";
 import { getSessionUser } from "@/lib/auth";
+import { BASE_PATH } from "@/lib/base-path";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,7 +14,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
   },
   icons: {
-    icon: "/favicon.svg",
+    // Metadata icon strings are not prefixed by basePath (confirmed in the HTML).
+    // public/favicon.svg is served at /maintenance/favicon.svg.
+    icon: `${BASE_PATH}/favicon.svg`,
   },
 };
 

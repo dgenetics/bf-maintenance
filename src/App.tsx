@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { DataProvider, useData } from "./context/DataContext";
 import { Layout } from "./components/Layout";
@@ -72,6 +73,7 @@ function LoadingShell({ onSignedOut }: { onSignedOut: () => void }) {
 }
 
 export default function App() {
+  const router = useRouter();
   const [ready, setReady] = useState(false);
   const [authState, setAuthState] = useState<
     "checking" | "locked" | "unlocked"
@@ -126,6 +128,8 @@ export default function App() {
       <AuthGate
         onSuccess={() => {
           setAuthState("unlocked");
+          // SiteNav's Account / Sign in label is rendered by the server layout.
+          router.refresh();
         }}
       />
     );
