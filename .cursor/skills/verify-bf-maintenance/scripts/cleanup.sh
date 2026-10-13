@@ -11,14 +11,16 @@ stop_pidfile() {
   [[ -f "$pidfile" ]] || return 0
   local pid
   pid=$(cat "$pidfile" || true)
-  if [[ -n "${pid:-}" ]] && kill -0 "$pid" 2>/dev/null; then
-    # Kill process group if possible; fall back to the recorded pid.
-    kill "$pid" 2>/dev/null || true
+  if [[ -n "${pid:-}" ]]; then
+    # farm-door starts bf as its own process group. Signal the group and the pid.
+    kill -TERM -"$pid" 2>/dev/null || true
+    kill -TERM "$pid" 2>/dev/null || true
     sleep 0.5
-    if kill -0 "$pid" 2>/dev/null; then
-      kill -9 "$pid" 2>/dev/null || true
+    kill -KILL -"$pid" 2>/dev/null || true
+    kill -KILL "$pid" 2>/dev/null || true
+    if ! kill -0 "$pid" 2>/dev/null; then
+      echo "stopped pid $pid ($pidfile)"
     fi
-    echo "stopped pid $pid ($pidfile)"
   fi
   rm -f "$pidfile"
 }

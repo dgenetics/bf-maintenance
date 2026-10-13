@@ -95,7 +95,7 @@ echo "POST /maintenance/api/auth/login -> $gone"
 [[ "$gone" == "404" ]] || { echo "FAIL: bf login route should be gone"; exit 1; }
 
 if [[ -n "${BF_INTEGRATION_SECRET:-}" ]]; then
-  authed=$(curl -s -o /tmp/bf-doctor-int.json -w '%{http_code}' --max-time 10 \
+  authed=$(curl -s -L -o /tmp/bf-doctor-int.json -w '%{http_code}' --max-time 10 \
     -X POST "$BASE/api/integrations/tasks/complete" \
     -H "authorization: Bearer ${BF_INTEGRATION_SECRET}" \
     -H 'content-type: application/json' \

@@ -332,6 +332,7 @@ const child = spawn(
       PORT: String(bfPort),
       AIEA_URL: `http://127.0.0.1:${publicPort}`,
     },
+    detached: true,
     stdio: ["ignore", "pipe", "pipe"],
   },
 );
@@ -340,11 +341,23 @@ child.stderr?.pipe(process.stderr);
 if (bfPidFile && child.pid) writeFileSync(bfPidFile, String(child.pid));
 
 let stopping = false;
+function killChild() {
+  if (!child.pid) return;
+  try {
+    process.kill(-child.pid, "SIGTERM");
+  } catch {
+    try {
+      child.kill("SIGTERM");
+    } catch {
+      /* already gone */
+    }
+  }
+}
 function shutdown(code = 0) {
   if (stopping) return;
   stopping = true;
-  if (child.exitCode === null && !child.killed) child.kill("SIGTERM");
-  setTimeout(() => process.exit(code), 200).unref();
+  killChild();
+  setTimeout(() => process.exit(code), 300).unref();
 }
 process.on("SIGTERM", () => shutdown(0));
 process.on("SIGINT", () => shutdown(0));
