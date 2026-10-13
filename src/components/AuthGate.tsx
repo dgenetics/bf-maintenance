@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { withBase } from "@/lib/base-path";
 import { Button, Input } from "./ui";
 
 type Mode = "signin" | "register";
@@ -18,8 +19,9 @@ export function AuthGate({ onSuccess }: { onSuccess: () => void }) {
     setBusy(true);
     setError(null);
     try {
-      const path =
-        mode === "signin" ? "/api/auth/login" : "/api/auth/register";
+      const path = withBase(
+        mode === "signin" ? "/api/auth/login" : "/api/auth/register",
+      );
       const body =
         mode === "signin"
           ? { email, password }
@@ -49,7 +51,7 @@ export function AuthGate({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-cream-100 px-4">
+    <div className="flex h-full items-center justify-center bg-cream-100 px-4">
       <div className="w-full max-w-sm rounded-2xl border border-cream-200 bg-white p-6 shadow-sm">
         <div className="mb-5 text-center">
           <p className="text-[10px] font-semibold tracking-[0.18em] text-muted uppercase">

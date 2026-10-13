@@ -10,7 +10,7 @@ Archive lists completed maintenance tasks with filters (system, component, compl
 
 ## How to get to it (user POV)
 
-- Maintenance → Archive button (`/maintenance/archive`).
+- Maintenance → Archive button (`/maintenance/maintenance/archive`).
 - Recently completed → View all / Archive.
 
 ## Driving it with Playwright
@@ -25,5 +25,5 @@ Preconditions:
 
 ## Gotchas
 
-- Incomplete tasks never belong here; open work stays on `/maintenance` buckets.
+- Incomplete tasks never belong here; open work stays on `/maintenance/maintenance` buckets.
 - Not AiEA’s DONE archive.

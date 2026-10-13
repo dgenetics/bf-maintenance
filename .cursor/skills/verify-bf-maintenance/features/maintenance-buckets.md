@@ -10,7 +10,7 @@ Maintenance partitions open tasks into Overdue, Due soon (within 7 days), and Up
 
 ## How to get to it (user POV)
 
-- Bottom nav → Chores (`/maintenance`).
+- Bottom nav → Chores (`/maintenance/maintenance`). The zone mount and the chores route share the name, so the screen is `/maintenance` + `/maintenance`.
 - From Systems, open Chores.
 
 ## Driving it with Playwright

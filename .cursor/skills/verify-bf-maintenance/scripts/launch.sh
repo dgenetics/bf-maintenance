@@ -65,7 +65,7 @@ echo "$RUN_ID" >"$OUT/../.last-run-id"
 
 ready=0
 for _ in $(seq 1 60); do
-  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 2 "$BASE/" || true)
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 2 "$BASE/maintenance" || true)
   if [[ "$code" == "200" ]]; then
     ready=1
     break

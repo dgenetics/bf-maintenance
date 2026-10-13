@@ -5,6 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { DataProvider, useData } from "./context/DataContext";
 import { Layout } from "./components/Layout";
 import { AuthGate } from "./components/AuthGate";
+import { BASE_PATH, withBase } from "./lib/base-path";
 import { cleanupLegacyClient } from "./lib/cleanup-legacy";
 import { AssetList } from "./views/AssetList";
 import { AssetDetail } from "./views/AssetDetail";
@@ -19,14 +20,14 @@ function LoadingShell({ onSignedOut }: { onSignedOut: () => void }) {
   const { loading, error, refresh } = useData();
   if (loading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-cream-100 text-sm text-muted">
+      <div className="flex h-full items-center justify-center bg-cream-100 text-sm text-muted">
         Loading registry…
       </div>
     );
   }
   if (error) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-cream-100 px-4 text-center">
+      <div className="flex h-full flex-col items-center justify-center gap-3 bg-cream-100 px-4 text-center">
         <p className="text-sm font-medium text-ink">Could not load data</p>
         <p className="max-w-sm text-xs text-muted">{error}</p>
         <p className="max-w-sm text-xs text-muted">
@@ -100,7 +101,7 @@ export default function App() {
 
   const checkAuth = useCallback(async () => {
     try {
-      const res = await fetch("/api/auth/me", { credentials: "include" });
+      const res = await fetch(withBase("/api/auth/me"), { credentials: "include" });
       setAuthState(res.ok ? "unlocked" : "locked");
     } catch {
       setAuthState("locked");
@@ -114,7 +115,7 @@ export default function App() {
 
   if (!ready || authState === "checking") {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-cream-100 text-sm text-muted">
+      <div className="flex h-full items-center justify-center bg-cream-100 text-sm text-muted">
         Checking access…
       </div>
     );
@@ -132,7 +133,7 @@ export default function App() {
 
   return (
     <DataProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={BASE_PATH}>
         <LoadingShell onSignedOut={() => setAuthState("locked")} />
       </BrowserRouter>
     </DataProvider>

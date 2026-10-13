@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { SiteNav } from "@/components/site-nav";
+import { getSessionUser } from "@/lib/auth";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,14 +26,19 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const user = await getSessionUser();
+
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" className="h-full">
+      <body>
+        <SiteNav signedIn={Boolean(user)} zone="maintenance" />
+        <div className="min-h-0 w-full flex-1">{children}</div>
+      </body>
     </html>
   );
 }

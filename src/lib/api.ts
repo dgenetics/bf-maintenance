@@ -3,11 +3,12 @@
  * Complements systems API in api-client.ts.
  */
 import type { ScheduleJson, TaskJson } from "@/lib/maintenance";
+import { withBase } from "@/lib/base-path";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(path, {
+    res = await fetch(withBase(path), {
       ...init,
       credentials: "include",
       headers: {
@@ -21,7 +22,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!res.ok) {
     if (res.status === 401 && typeof window !== "undefined") {
-      window.location.assign("/");
+      window.location.assign(withBase("/"));
       throw new Error("Session expired — sign in again");
     }
     let message = res.statusText;
