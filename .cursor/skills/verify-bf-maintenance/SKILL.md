@@ -58,7 +58,7 @@ The app is mounted at `/maintenance` (`basePath`). `VERIFY_BASE_URL` stays the o
 
 Must pass:
 
-1. `GET /maintenance` → 200
+1. `GET /` → 307/308 to `/maintenance`, and `GET /maintenance` → 200
 2. Wrong password → `401`/`403` on `POST /maintenance/api/auth/login`
 3. Correct email/password → 200 + `bf_session` cookie
 4. `GET /maintenance/api/auth/me` → authenticated

@@ -27,6 +27,32 @@ MOUNT="${BASE%/}/maintenance"
 code=$(curl -s -o /tmp/bf-doctor-root.html -w '%{http_code}' --max-time 10 "$MOUNT" || echo "000")
 echo "GET /maintenance -> $code"
 [[ "$code" == "200" ]] || { echo "FAIL: /maintenance not 200"; exit 1; }
+
+# Host root redirects onto the mount (bookmarks / installed app).
+root_headers=$(mktemp)
+root_code=$(curl -s -D "$root_headers" -o /dev/null -w '%{http_code}' --max-time 10 "$BASE/" || echo "000")
+echo "GET / -> $root_code"
+[[ "$root_code" == "307" || "$root_code" == "308" ]] || { echo "FAIL: / should redirect to /maintenance"; rm -f "$root_headers"; exit 1; }
+if ! grep -qiE '^location: *(https?://[^[:space:]]*)?/maintenance[[:space:]]*$' "$root_headers"; then
+  echo "FAIL: / Location header was not /maintenance"
+  cat "$root_headers"
+  rm -f "$root_headers"
+  exit 1
+fi
+rm -f "$root_headers"
+
+# TEMPORARY: unprefixed integration routes redirect onto /maintenance/api/integrations.
+# 307 preserves POST. Follow it and expect the JSON auth error, not the HTML shell.
+bridge=$(curl -s -L -o /tmp/bf-doctor-bridge.json -w '%{http_code}' --max-time 10 \
+  -X POST "$BASE/api/integrations/tasks/complete" \
+  -H 'content-type: application/json' \
+  -d '{"taskId":"doctor-bridge"}' || echo "000")
+echo "POST /api/integrations/tasks/complete (followed) -> $bridge $(head -c 180 /tmp/bf-doctor-bridge.json)"
+[[ "$bridge" == "401" || "$bridge" == "503" ]] || { echo "FAIL: integration bridge did not reach the JSON handler"; exit 1; }
+if ! grep -q '"error"' /tmp/bf-doctor-bridge.json; then
+  echo "FAIL: integration bridge body was not JSON"
+  exit 1
+fi
 if ! grep -qiE 'Beausoleil|Maintenance|Sign in|Checking access|Get started' /tmp/bf-doctor-root.html; then
   echo "WARN: root HTML did not mention Beausoleil/Maintenance (SPA shell may still be ok)"
 fi

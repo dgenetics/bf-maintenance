@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { DataProvider, useData } from "./context/DataContext";
 import { Layout } from "./components/Layout";
@@ -21,23 +20,23 @@ function LoadingShell({ onSignedOut }: { onSignedOut: () => void }) {
   const { loading, error, refresh } = useData();
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center bg-cream-100 text-sm text-muted">
+      <div className="flex min-h-dvh items-center justify-center bg-cream-100 text-sm text-muted">
         Loading registry…
       </div>
     );
   }
   if (error) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 bg-cream-100 px-4 text-center">
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-cream-100 px-4 text-center">
         <p className="text-sm font-medium text-ink">Could not load data</p>
         <p className="max-w-sm text-xs text-muted">{error}</p>
         <p className="max-w-sm text-xs text-muted">
           Use the app at{" "}
           <a
             className="underline"
-            href="https://bf-maintenance.vercel.app"
+            href="/maintenance"
           >
-            bf-maintenance.vercel.app
+            bf-maintenance.vercel.app/maintenance
           </a>{" "}
           or run <code className="rounded bg-cream-200 px-1">npm run dev</code>{" "}
           in BF-Maintenance (often http://localhost:3001 if 3000 is taken).
@@ -73,7 +72,6 @@ function LoadingShell({ onSignedOut }: { onSignedOut: () => void }) {
 }
 
 export default function App() {
-  const router = useRouter();
   const [ready, setReady] = useState(false);
   const [authState, setAuthState] = useState<
     "checking" | "locked" | "unlocked"
@@ -117,7 +115,7 @@ export default function App() {
 
   if (!ready || authState === "checking") {
     return (
-      <div className="flex h-full items-center justify-center bg-cream-100 text-sm text-muted">
+      <div className="flex min-h-dvh items-center justify-center bg-cream-100 text-sm text-muted">
         Checking access…
       </div>
     );
@@ -125,13 +123,7 @@ export default function App() {
 
   if (authState === "locked") {
     return (
-      <AuthGate
-        onSuccess={() => {
-          setAuthState("unlocked");
-          // SiteNav's Account / Sign in label is rendered by the server layout.
-          router.refresh();
-        }}
-      />
+      <AuthGate onSuccess={() => setAuthState("unlocked")} />
     );
   }
 
